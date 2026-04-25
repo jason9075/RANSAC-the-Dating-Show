@@ -3,213 +3,495 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>gfx-lab</title>
+  <title>RANSAC — The Dating Show</title>
 
   <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-          onload="renderMathInElement(document.body, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            macros: {
-              '\\R': '\\mathbb{R}',
-              '\\vec': '\\mathbf{#1}',
-              '\\mat': '\\mathbf{#1}'
-            }
-          });"></script>
-
-  <!-- Prism.js (Nord theme) — syntax highlighting for modal code blocks -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-nord.css" />
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
-
-  <!-- Import Maps for Three.js (ESM) -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
-    }
-  }
-  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <style>
-    /* Nord colour palette */
     :root {
-      --nord0:  #2E3440;
-      --nord1:  #3B4252;
-      --nord2:  #434C5E;
-      --nord3:  #4C566A;
-      --nord4:  #D8DEE9;
-      --nord5:  #E5E9F0;
-      --nord6:  #ECEFF4;
-      --nord7:  #8FBCBB;
-      --nord8:  #88C0D0;
-      --nord9:  #81A1C1;
-      --nord10: #5E81AC;
-      --nord11: #BF616A;
-      --nord12: #D08770;
-      --nord13: #EBCB8B;
-      --nord14: #A3BE8C;
-      --nord15: #B48EAD;
+      --bg:           #FFFDD0;
+      --bg-pink:      #FFF0F5;
+      --dot:          #B2AC88;
+      --inlier:       #FF8B94;
+      --outlier:      #A9A9A9;
+      --consensus:    #c9a0dc;
+      --text:         #5a4a4a;
+      --text-sub:     #8a7a7a;
+      --panel-bg:     rgba(255,255,255,0.55);
+      --panel-border: rgba(255,139,148,0.22);
+      --radius:       24px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: var(--nord0);
-      color: var(--nord4);
-      font-family: 'JetBrains Mono', monospace, sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg-pink) 100%);
+      color: var(--text);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      overflow: hidden;
     }
 
-    canvas { display: block; }
-
-    #info {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      color: var(--nord8);
-      font-size: 0.85rem;
+    /* ── Header ── */
+    #header {
+      text-align: center;
+      padding: 0.7rem 1rem 0.4rem;
+      flex-shrink: 0;
+    }
+    #header h1 {
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      font-weight: 800;
+      color: var(--inlier);
+      letter-spacing: 0.02em;
+    }
+    #header p {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      margin-top: 0.15rem;
     }
 
-    #toolbar {
-      position: fixed;
-      top: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
+    /* ── Main layout ── */
+    #main {
       display: flex;
-      gap: 0.75rem;
+      flex: 1;
+      gap: 0.65rem;
+      padding: 0 0.75rem 0.75rem;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Panels ── */
+    #left-panel, #right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      flex-shrink: 0;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    #left-panel  { width: 210px; }
+    #right-panel { width: 195px; }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 0.8rem 0.95rem;
+      box-shadow: 0 4px 18px rgba(255,139,148,0.07);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 0.62rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--inlier);
+      margin-bottom: 0.6rem;
+    }
+
+    /* Axis selectors */
+    .axis-row {
+      display: flex;
       align-items: center;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--nord3);
-      border-radius: 999px;
-      background: rgba(59, 66, 82, 0.88);
-      backdrop-filter: blur(10px);
-      z-index: 20;
+      gap: 0.4rem;
+      margin-bottom: 0.38rem;
     }
-
-    #toolbar label,
-    #toolbar select,
-    #toolbar button {
-      font: inherit;
+    .axis-row label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      width: 16px;
     }
-
-    #toolbar select,
-    #toolbar button,
-    .modal-toggle {
-      border: 1px solid var(--nord3);
-      border-radius: 999px;
-      background: var(--nord1);
-      color: var(--nord6);
-      padding: 0.45rem 0.8rem;
-    }
-
-    .icon-button {
-      font-size: 1.1rem;
-      line-height: 1;
+    .axis-row select {
+      flex: 1;
+      font-size: 0.68rem;
+      padding: 0.28rem 0.45rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.75);
+      color: var(--text);
       cursor: pointer;
     }
 
-    #math-modal[hidden] {
-      display: none;
-    }
-
-    #math-modal {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: rgba(46, 52, 64, 0.78);
-      z-index: 50;
-    }
-
-    .modal-panel {
-      width: min(720px, calc(100vw - 2rem));
-      max-height: calc(100vh - 2rem);
-      overflow: auto;
-      background: var(--nord1);
-      border: 1px solid var(--nord3);
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-      padding: 1.25rem;
-    }
-
-    .modal-header {
+    /* Toggle buttons */
+    .toggle-btn {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .modal-header h2 {
-      font-size: 1rem;
-      color: var(--nord8);
-    }
-
-    .modal-actions {
-      display: flex;
       gap: 0.5rem;
+      width: 100%;
+      padding: 0.42rem 0.65rem;
+      margin-bottom: 0.3rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.45);
+      color: var(--text);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      text-align: left;
+    }
+    .toggle-btn:last-child { margin-bottom: 0; }
+    .toggle-btn.active {
+      background: rgba(255,139,148,0.15);
+      border-color: var(--inlier);
+      color: var(--inlier);
+      font-weight: 700;
+    }
+    .toggle-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* RANSAC sliders */
+    .ctrl-row {
+      display: flex;
       align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.38rem;
+    }
+    .ctrl-row label {
+      font-size: 0.66rem;
+      color: var(--text-sub);
+      flex: 1;
+    }
+    .ctrl-row input[type=range] {
+      width: 72px;
+      accent-color: var(--inlier);
+    }
+    .ctrl-row span {
+      font-size: 0.68rem;
+      color: var(--text);
+      width: 26px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
-    .modal-body {
-      display: grid;
-      gap: 0.85rem;
-      line-height: 1.7;
-      color: var(--nord5);
+    .run-btn {
+      width: 100%;
+      padding: 0.52rem;
+      margin-top: 0.1rem;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #FF8B94, #ffb3ba);
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 14px rgba(255,139,148,0.32);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .run-btn:hover  { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,139,148,0.42); }
+    .run-btn:active { transform: translateY(0); }
+    .run-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* ── Canvas area ── */
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255,255,255,0.28);
+      border: 1px solid var(--panel-border);
+      min-width: 0;
+    }
+    #scatter-canvas { width: 100%; height: 100%; display: block; }
+
+    #glow-overlay {
+      position: absolute; inset: 0;
+      border-radius: var(--radius);
+      pointer-events: none; opacity: 0;
+      box-shadow: inset 0 0 60px 24px rgba(255,139,148,0.55);
+      transition: opacity 0.12s;
     }
 
-    .modal-body pre[class*="language-"] {
-      border-radius: 8px;
-      overflow-x: auto;
-      font-size: 0.82rem;
-      margin: 0;
+    #singular-warn {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      font-size: 0.58rem; color: #c44; opacity: 0; pointer-events: none;
+      white-space: nowrap; transition: opacity 0.3s;
+    }
+
+    #axis-x-label {
+      position: absolute; bottom: 8px; right: 14px;
+      font-size: 0.62rem; color: var(--text-sub);
+    }
+    #axis-y-label {
+      position: absolute; top: 14px; left: 8px;
+      font-size: 0.62rem; color: var(--text-sub);
+      writing-mode: vertical-rl; transform: rotate(180deg);
+    }
+
+    /* Result banner */
+    #result-banner {
+      display: none;
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.95);
+      border: 2px solid var(--inlier);
+      border-radius: 18px;
+      padding: 0.9rem 1.4rem;
+      text-align: center;
+      z-index: 30;
+      box-shadow: 0 8px 32px rgba(255,139,148,0.28);
+      pointer-events: none;
+      animation: popIn 0.3s ease;
+    }
+    #result-banner.visible { display: block; }
+    @keyframes popIn {
+      from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+    }
+    #result-banner .rb-title { font-size: 1.1rem; font-weight: 800; color: var(--inlier); }
+    #result-banner .rb-sub   { font-size: 0.68rem; color: var(--text-sub); margin-top: 0.25rem; }
+
+    /* ── Right stats ── */
+    .stat-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline; margin-bottom: 0.32rem; font-size: 0.67rem;
+    }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { color: var(--text-sub); }
+    .stat-value { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .stat-value.hl { color: var(--inlier); }
+
+    #progress-bar-wrap {
+      height: 5px; background: rgba(178,172,136,0.2);
+      border-radius: 3px; margin-top: 0.5rem; overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #FF8B94, #ffb3ba);
+      border-radius: 3px; transition: width 0.08s;
+    }
+
+    /* Legend */
+    .legend-row {
+      display: flex; align-items: center; gap: 0.45rem;
+      margin-bottom: 0.28rem; font-size: 0.67rem; color: var(--text-sub);
+    }
+    .legend-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* Formula */
+    #formula-panel { display: none; }
+    #formula-panel.visible { display: block; }
+    #formula-text {
+      font-size: 0.6rem; color: var(--text);
+      line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed; pointer-events: none;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,139,148,0.35);
+      border-radius: 16px; backdrop-filter: blur(12px);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.66rem; color: var(--text);
+      box-shadow: 0 8px 24px rgba(255,139,148,0.12);
+      z-index: 100; opacity: 0; transition: opacity 0.15s;
+      max-width: 220px; line-height: 1.7;
+    }
+    #tooltip.visible { opacity: 1; }
+    #tooltip .tt-title { font-weight: 800; color: var(--inlier); margin-bottom: 0.28rem; font-size: 0.7rem; }
+    #tooltip .tt-row   { display: flex; justify-content: space-between; gap: 0.5rem; }
+    #tooltip .tt-key   { color: var(--text-sub); }
+    #tooltip .tt-val   { font-weight: 600; }
+
+    /* ── Math modal ── */
+    #math-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(255,240,245,0.65);
+      backdrop-filter: blur(8px); z-index: 200;
+      place-items: center;
+    }
+    #math-modal.open { display: grid; }
+    .modal-panel {
+      width: min(680px, calc(100vw - 2rem));
+      max-height: calc(100vh - 3rem); overflow-y: auto;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(255,139,148,0.28);
+      border-radius: 26px;
+      box-shadow: 0 20px 60px rgba(255,139,148,0.18);
+      padding: 1.4rem;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 1rem;
+    }
+    .modal-header h2 { font-size: 0.95rem; color: var(--inlier); }
+    .modal-actions { display: flex; gap: 0.45rem; }
+    .modal-btn {
+      padding: 0.32rem 0.75rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.8);
+      color: var(--text); font-size: 0.7rem; cursor: pointer;
+    }
+    .modal-body { line-height: 1.85; color: var(--text); font-size: 0.8rem; }
+    .modal-body p { margin-bottom: 0.7rem; }
+    .modal-body .katex-display { margin: 0.5rem 0; overflow-x: auto; }
+
+    /* 💡 button */
+    #math-btn {
+      position: fixed; bottom: 1.1rem; right: 1.1rem;
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.82); backdrop-filter: blur(10px);
+      font-size: 1.25rem; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,139,148,0.18);
+      z-index: 150; display: flex; align-items: center; justify-content: center;
     }
   </style>
 </head>
 <body>
-  <!-- GitHub Ribbon：將 href 替換為你的 repo URL -->
-  <!-- 顏色可換：forkme_right_red_aa0000 / forkme_right_green_007200 / forkme_right_darkblue_121621 -->
-  <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener">
-    <img loading="lazy" decoding="async" width="149" height="149"
-         style="position:fixed;top:0;right:0;border:0;z-index:9999;"
-         src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png"
-         alt="Fork me on GitHub">
-  </a>
 
-  <div id="info">gfx-lab | Three.js + KaTeX + Nord</div>
-  <div id="toolbar" aria-label="Tool controls">
-    <label for="render-mode">Render Mode</label>
-    <select id="render-mode">
-      <option value="wireframe">Wireframe</option>
-      <option value="solid">Solid</option>
-    </select>
-    <button id="pause-button" type="button">Pause Rotation</button>
-    <button id="open-math" class="icon-button" type="button" aria-haspopup="dialog" aria-controls="math-modal" aria-label="Explain the math">💡</button>
-  </div>
-  <canvas id="canvas"></canvas>
+<div id="header">
+  <h1>💘 RANSAC — The Dating Show</h1>
+  <p>Finding true love in 8 dimensions &nbsp;|&nbsp; 100 candidates · 20 soul matches hidden within</p>
+</div>
 
-  <div id="math-modal" role="dialog" aria-modal="true" aria-labelledby="math-title" hidden>
-    <div class="modal-panel">
-      <div class="modal-header">
-        <h2 id="math-title">Math Behind the Scene</h2>
-        <div class="modal-actions">
-          <button id="language-toggle" class="modal-toggle" type="button">Eng/中</button>
-          <button id="close-math" class="modal-toggle" type="button" aria-label="Close">Close</button>
-        </div>
+<div id="main">
+  <!-- Left Panel -->
+  <div id="left-panel">
+    <div class="panel">
+      <div class="panel-title">Projection Axes</div>
+      <div class="axis-row">
+        <label>X</label>
+        <select id="axis-x"></select>
       </div>
-      <div id="math-content" class="modal-body"></div>
+      <div class="axis-row">
+        <label>Y</label>
+        <select id="axis-y"></select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">God Mode</div>
+      <button class="toggle-btn" id="toggle-inliers">
+        <span class="toggle-dot" style="background:#FF8B94;"></span>
+        Show Inliers
+      </button>
+      <button class="toggle-btn" id="toggle-outliers">
+        <span class="toggle-dot" style="background:#A9A9A9;"></span>
+        Show Outliers
+      </button>
+      <button class="toggle-btn" id="toggle-truth">
+        <span class="toggle-dot" style="background:#c9a0dc; border:1px dashed #9b7bb5;"></span>
+        Ground Truth Line
+      </button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">RANSAC Config</div>
+      <div class="ctrl-row">
+        <label>Iterations</label>
+        <input type="range" id="ctrl-iter" min="10" max="200" value="50" />
+        <span id="val-iter">50</span>
+      </div>
+      <div class="ctrl-row">
+        <label>Threshold</label>
+        <input type="range" id="ctrl-thresh" min="1" max="30" value="10" />
+        <span id="val-thresh">10</span>
+      </div>
+      <button class="run-btn" id="run-btn">▶ Run RANSAC</button>
     </div>
   </div>
 
-  <script type="module" src="./src/main.js"></script>
+  <!-- Canvas -->
+  <div id="canvas-wrap">
+    <canvas id="scatter-canvas"></canvas>
+    <div id="glow-overlay"></div>
+    <div id="singular-warn">⚠ Matrix Singular — Retrying...</div>
+    <div id="axis-x-label"></div>
+    <div id="axis-y-label"></div>
+    <div id="result-banner">
+      <div class="rb-title">💘 True Love Found!</div>
+      <div class="rb-sub" id="result-sub"></div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div id="right-panel">
+    <div class="panel">
+      <div class="panel-title">Algorithm Monitor</div>
+      <div class="stat-row">
+        <span class="stat-label">RANSAC Iteration</span>
+        <span class="stat-value" id="stat-iter">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Consensus Set Size</span>
+        <span class="stat-value hl" id="stat-consensus">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Max Consensus Found</span>
+        <span class="stat-value hl" id="stat-max">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Model Residual</span>
+        <span class="stat-value" id="stat-residual">—</span>
+      </div>
+      <div id="progress-bar-wrap">
+        <div id="progress-bar"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Legend</div>
+      <div class="legend-row">
+        <span class="legend-dot" style="background:#B2AC88;"></span>
+        Default candidate
+      </div>
+      <div class="legend-row">
+        <span class="legend-dot" style="background:#FF8B94;"></span>
+        Inlier (soul match)
+      </div>
+      <div class="legend-row">
+        <span class="legend-dot" style="background:#A9A9A9;"></span>
+        Outlier (acting)
+      </div>
+      <div class="legend-row">
+        <span class="legend-dot" style="background:#c9a0dc;"></span>
+        RANSAC consensus
+      </div>
+    </div>
+
+    <div class="panel" id="formula-panel">
+      <div class="panel-title">True Love Formula</div>
+      <div id="formula-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- Math Modal -->
+<div id="math-modal" role="dialog" aria-modal="true">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2>Math Behind the Scene</h2>
+      <div class="modal-actions">
+        <button class="modal-btn" id="lang-toggle">Eng / 中</button>
+        <button class="modal-btn" id="close-modal">Close ✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<button id="math-btn" title="Explain the math">💡</button>
+
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>
