@@ -476,7 +476,7 @@ const MODAL = {
     <tr>
       <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Dotfiles Authenticity</td>
       <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
-      <td style="padding:0.32rem 0.5rem;">What percentage of your Neovim/shell config did you actually write yourself vs. copy-paste from r/unixporn? 0 = a 4,000-line init.lua you've never read, 100 = you know exactly why every keybind exists. Partners compare dotfiles on the first date.</td>
+      <td style="padding:0.32rem 0.5rem;">Of the things you confidently call "your own work," what fraction did you actually produce? 0 = copy-pasted the ChatGPT output, changed the font, and submitted it as original, 100 = you can explain every sentence in your own words without looking at the source. Your soul match operates at exactly the same level of plausible deniability as you do.</td>
     </tr>
   </tbody>
 </table>
@@ -536,9 +536,9 @@ const MODAL = {
       <td style="padding:0.32rem 0.5rem;">被已讀不回之後的心理復原速度。1 = 兩年後還在反覆看對方的限時動態，10 = 「誰？算了，來看我的新 side project」。高分令人欽佩；滿分可能代表迴避型依附。</td>
     </tr>
     <tr>
-      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Dotfiles 自研純度</td>
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ 作品原創純度</td>
       <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
-      <td style="padding:0.32rem 0.5rem;">你的 Neovim / shell 設定有多少百分比是你自己寫的，而不是從 r/unixporn 複製貼上的？0 = 四千行 init.lua 從未讀完，100 = 每個 keybind 都知道存在的理由。真正的情侶在第一次約會就會互 clone dotfiles。</td>
+      <td style="padding:0.32rem 0.5rem;">你說的「我做的」有幾成真的是你做的？0 = 整份報告讓 AI 生成，改了字型跟抬頭就交出去，然後在會議上口若懸河地介紹「我的想法」；100 = 每一句你都能用自己的話再說一遍，包括那個你其實借鑑別人但沒提的段落。真愛就是找到一個跟你「誠實程度」剛好一樣的人，多一分嫌對方偽善，少一分嫌對方沒自信。</td>
     </tr>
   </tbody>
 </table>
