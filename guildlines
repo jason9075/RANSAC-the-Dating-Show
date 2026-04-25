@@ -1,0 +1,62 @@
+這是一份為你的 8D 戀愛實境秀量身打造的 **「RANSAC 真愛掃描儀」正式設計規範 (Official Design Guidelines)**。這份規範將資深軟體工程師的嚴謹邏輯，包裹在粉嫩、充滿戀愛節目的氛圍中。
+
+---
+
+## 1. 核心視覺風格 (Visual Identity)
+* **主題語調**：夢幻、馬卡龍色系、柔軟但精準。
+* **配色方案**：
+    * **背景 (Background)**：奶油白 (#FFFDD0) 或極淺櫻花粉 (#FFF0F5)。
+    * **預設點 (Default Dots)**：霧面鼠尾草綠 (#B2AC88)，圓形，具備柔和陰影。
+    * **Inliers (真愛戰士)**：蜜桃粉 (#FF8B94)，開啟 `Show Inliers` 時具備規律的心跳縮放動畫。
+    * **Outliers (演技派)**：莫蘭迪灰 (#A9A9A9)，開啟 `Show Outliers` 時降低透明度至 20%。
+* **介面元素**：所有的 Control Panel 使用大圓角 (Border-radius: 24px) 與半透明玻璃質感 (Glassmorphism)。
+
+---
+
+## 2. 8D 特徵向量清單 (The 8D Feature Vector)
+受試者的座標由以下 8 個維度定義，將用於 RANSAC 的高維超平面擬合：
+
+1.  **Cilantro Tolerance** (0-100)：香菜耐受度。
+2.  **Cloud Invoice Rate** (0-100%)：發票載具使用頻率。
+3.  **Threads Shitposting Index** (每日發文量)：廢文產出指數。
+4.  **AC Temp Preference** (16-30°C)：空調偏好溫度。
+5.  **Mysticism Belief** (0-100)：神祕學/星座迷信程度。
+6.  **Mute Speed** (秒)：家長/社交群組靜音反射時間。
+7.  **Ghosting Resilience** (1-10)：被放鳥後的心理復原係數。
+8.  **Dotfiles Authenticity** (0-100)：Neovim/GitHub 配置的自研純度。
+
+---
+
+## 3. RANSAC 邏輯與真理定義 (Ground Truth)
+* **Ground Truth (真理)**：系統預設一組隱藏的權重向量 $\mathbf{w}_{true}$ 與截距 $b$，這 20 個 Inliers 的 $Y$ 值嚴格符合 $Y = \sum w_ix_i + b + \epsilon$。
+* **Residual (r, 殘差)**：代表演戲的代價。計算公式為點到當前估計超平面的距離 $r = |Y_{actual} - Y_{estimate}|$。
+* **Threshold (閾值)**：判定是否為「心動共振」的容許誤差界限。
+* **Iteration (迭代)**：在 8D 空間中，每次隨機抽樣 $k=9$ 個人來建立假設模型，重複執行直至找到最大 Consensus Set。
+
+---
+
+## 4. UI 功能區塊規範 (UI Section Rules)
+
+### A. 畫布控制 (Canvas Dynamics)
+* **Axis Selectors**：提供 X 與 Y 軸下拉選單，可從 8D 指標中自由切換。
+* **Smooth Transition**：切換軸向時，點點必須具備流體動力學的平滑位移效果，不可瞬間閃現。
+
+### B. 上帝視角開關 (Identity Toggles)
+* **Show/Hide Inliers**：一鍵高亮 20 個粉紅點，揭露誰才是遵循真理公式的純愛戰士。
+* **Show/Hide Outliers**：一鍵淡化 80 個灰色點，過濾掉隨機報數的演技派。
+* **Show Ground Truth Line**：顯示一條從點到真理平面的虛擬引力線，視覺化 Residual 的長度。
+
+### C. 專業監控面板 (Algorithm Monitor)
+* **術語保持**：介面必須保留專業術語，如 `RANSAC Iteration`、`Consensus Set Size`、`Model Residual`。
+* **Hover State**：懸停在點上時，彈出半透明信箋卡片，詳細列出 8D 數據與該點的 **Individual Residual (r)**。
+
+---
+
+## 5. 互動反饋規則 (Interaction Rules)
+* **收斂警示**：當 RANSAC 找到目前最佳模型時，畫面邊緣應閃爍粉紅光暈，並更新 `Max Consensus Found` 的數值。
+* **失敗反饋**：若抽樣的 9 人樣本無法解出矩陣（Singular Matrix），該次迭代不更新，畫面上以極小紅字提示 `Matrix Singular - Retrying...`。
+* **最終呈現**：RANSAC 結束後，顯眼地展示最終擬合出的「真愛公式」，並讓所有 Inliers 進入同步心跳模式。
+
+---
+
+這份正式 Guidelines 將專業的 RANSAC 演算法邏輯隱藏在極致浪漫的視覺外殼之下。你準備好要在這 100 個點中，揪出那 80 個正在演戲的 Outliers 了嗎？
