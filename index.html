@@ -195,6 +195,21 @@
     .run-btn:active { transform: translateY(0); }
     .run-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
+    .reset-btn {
+      flex-shrink: 0;
+      width: 34px; height: 34px;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.6);
+      color: var(--text-sub);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      margin-top: 0.1rem;
+    }
+    .reset-btn:hover { background: rgba(255,139,148,0.12); color: var(--inlier); }
+
     /* ── Canvas area ── */
     #canvas-wrap {
       flex: 1;
@@ -288,7 +303,15 @@
     #formula-panel.visible { display: block; }
     #formula-text { font-size: 0.62rem; color: var(--text); line-height: 1.75; }
 
-    .fl-label { font-weight: 800; color: var(--inlier); margin-bottom: 0.1rem; }
+    .formula-section-title {
+      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.2rem;
+    }
+    .formula-divider {
+      height: 1px; background: var(--panel-border);
+      margin: 0.5rem 0;
+    }
+    .fl-label { font-weight: 800; color: var(--text-sub); margin-bottom: 0.1rem; font-size: 0.6rem; }
     .fl-weight { font-variant-numeric: tabular-nums; font-weight: 700; }
     .formula-line {
       padding: 0.18rem 0.4rem;
@@ -394,7 +417,7 @@
 
 <div id="header">
   <h1>💘 RANSAC — The Dating Show</h1>
-  <p data-i18n="subtitle">Finding true love in 8 dimensions &nbsp;|&nbsp; 100 candidates · 20 soul matches hidden within</p>
+  <p data-i18n="subtitle">Finding true love in 8 dimensions &nbsp;|&nbsp; 100 candidates · 50 soul matches hidden within</p>
 </div>
 
 <div id="main">
@@ -432,15 +455,23 @@
       <div class="panel-title" data-i18n="panelConfig">RANSAC Config</div>
       <div class="ctrl-row">
         <label data-i18n="lblIter">Iterations</label>
-        <input type="range" id="ctrl-iter" min="10" max="200" value="50" />
-        <span id="val-iter">50</span>
+        <input type="range" id="ctrl-iter" min="10" max="500" value="100" />
+        <span id="val-iter">100</span>
       </div>
       <div class="ctrl-row">
         <label data-i18n="lblThresh">Threshold</label>
         <input type="range" id="ctrl-thresh" min="1" max="30" value="10" />
         <span id="val-thresh">10</span>
       </div>
-      <button class="run-btn" id="run-btn" data-i18n="btnRun">▶ Run RANSAC</button>
+      <div class="ctrl-row">
+        <label data-i18n="lblSouls">Soul Matchers</label>
+        <input type="range" id="ctrl-souls" min="0" max="100" value="50" />
+        <span id="val-souls">50</span>
+      </div>
+      <div style="display:flex;gap:0.4rem;margin-top:0.1rem;">
+        <button class="run-btn" id="run-btn" data-i18n="btnRun" style="flex:1;">▶ Run RANSAC</button>
+        <button class="reset-btn" id="reset-btn" data-i18n="btnReset" title="Reset to defaults">↺</button>
+      </div>
     </div>
   </div>
 

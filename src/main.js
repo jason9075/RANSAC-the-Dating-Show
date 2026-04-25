@@ -28,9 +28,10 @@ const DIMS = [
     tipZh: '你說的「我做的」有幾成真的是你做的？0 = 整份報告讓 AI 生成，改完字型就上台報告；100 = 每句話都能用自己的話再說一遍。真愛就是找到跟你誠實程度剛好一樣的人。' },
 ];
 
-const N_TOTAL   = 100;
-const N_INLIERS = 20;
-const RANSAC_K  = 9; // 8 weights + 1 bias = 9 unknowns
+const N_TOTAL  = 100;
+const RANSAC_K = 9; // 8 weights + 1 bias = 9 unknowns
+
+const DEFAULTS = { nInliers: 50, maxIter: 100, threshold: 10 };
 
 const COLOR_DEFAULT   = '#B2AC88';
 const COLOR_INLIER    = '#FF8B94';
@@ -55,7 +56,8 @@ const S = {
   bestConsensus: 0,
   bestSet: new Set(),
   currentIter: 0,
-  maxIter:   50,
+  nInliers:  DEFAULTS.nInliers,
+  maxIter:   DEFAULTS.maxIter,
   threshold: 0.10,
   positions: [],  // current canvas coords [{cx,cy}]
   targets:   [],  // target  canvas coords [{cx,cy}]
@@ -77,6 +79,9 @@ const ctrlIter    = document.getElementById('ctrl-iter');
 const valIter     = document.getElementById('val-iter');
 const ctrlThresh  = document.getElementById('ctrl-thresh');
 const valThresh   = document.getElementById('val-thresh');
+const ctrlSouls   = document.getElementById('ctrl-souls');
+const valSouls    = document.getElementById('val-souls');
+const resetBtn    = document.getElementById('reset-btn');
 const statIter    = document.getElementById('stat-iter');
 const statCons    = document.getElementById('stat-consensus');
 const statMax     = document.getElementById('stat-max');
@@ -100,7 +105,7 @@ const globalLangBtn  = document.getElementById('global-lang-btn');
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
   en: {
-    subtitle:       'Finding true love in 8 dimensions | 100 candidates · 20 soul matches hidden within',
+    subtitle:       'Finding true love in 8 dimensions | 100 candidates · 50 soul matches hidden within',
     panelAxes:      'Projection Axes',
     panelGod:       'God Mode',
     panelConfig:    'RANSAC Config',
@@ -112,6 +117,8 @@ const I18N = {
     btnTruth:       'Ground Truth Line',
     lblIter:        'Iterations',
     lblThresh:      'Threshold',
+    lblSouls:       'Soul Matchers',
+    btnReset:       '↺',
     btnRun:         '▶ Run RANSAC',
     btnRunAgain:    '▶ Run Again',
     btnRunning:     '⏳ Running...',
@@ -125,13 +132,15 @@ const I18N = {
     legendConsensus:'RANSAC consensus',
     resultTitle:    '💘 True Love Found!',
     resultSub:      (n, t) => `${n} soul matches found in ${t} iterations`,
-    formulaBias:    '(bias)',
+    formulaBias:       '(bias)',
+    formulaGTLabel:    '🔮 Ground Truth',
+    formulaRANSACLabel:'🎯 RANSAC Estimate',
     modalTitle:     'Math Behind the Scene',
     modalClose:     'Close ✕',
     langBtn:        '中文',
   },
   zh: {
-    subtitle:       '在 8 個維度中尋找真愛｜100 位候選人 · 20 位真愛戰士藏在其中',
+    subtitle:       '在 8 個維度中尋找真愛｜100 位候選人 · 50 位真愛戰士藏在其中',
     panelAxes:      '投影軸',
     panelGod:       '上帝視角',
     panelConfig:    'RANSAC 設定',
@@ -143,6 +152,8 @@ const I18N = {
     btnTruth:       '真理平面',
     lblIter:        '迭代次數',
     lblThresh:      '閾值',
+    lblSouls:       '真愛戰士數量',
+    btnReset:       '↺',
     btnRun:         '▶ 執行 RANSAC',
     btnRunAgain:    '▶ 再跑一次',
     btnRunning:     '⏳ 執行中...',
@@ -156,7 +167,9 @@ const I18N = {
     legendConsensus:'RANSAC 共識集',
     resultTitle:    '💘 真愛現身！',
     resultSub:      (n, t) => `在 ${t} 次迭代中找到 ${n} 位真愛戰士`,
-    formulaBias:    '（截距）',
+    formulaBias:       '（截距）',
+    formulaGTLabel:    '🔮 真理權重',
+    formulaRANSACLabel:'🎯 RANSAC 估計',
     modalTitle:     '頁面背後的數學',
     modalClose:     '關閉 ✕',
     langBtn:        'English',
@@ -195,7 +208,7 @@ function generateData() {
   for (let i = 0; i < N_TOTAL; i++) {
     const raw  = DIMS.map(d => rng(d.min, d.max));
     const norm = DIMS.map((d, j) => (raw[j] - d.min) / (d.max - d.min));
-    const isInlier = i < N_INLIERS;
+    const isInlier = i < S.nInliers;
     let y;
     if (isInlier) {
       y = norm.reduce((s, x, j) => s + wTrue[j] * x, bTrue);
@@ -267,6 +280,24 @@ function predict(model, norm) {
   return norm.reduce((s, x, j) => s + model.w[j] * x, model.bias);
 }
 
+// Ordinary least squares via normal equations: (XᵀX)θ = Xᵀy
+function leastSquares(indices) {
+  const D = 9; // 8 features + 1 bias
+  const XTX = Array.from({length: D}, () => new Array(D).fill(0));
+  const XTy = new Array(D).fill(0);
+  for (const idx of indices) {
+    const c = S.candidates[idx];
+    const row = [...c.norm, 1];
+    for (let i = 0; i < D; i++) {
+      XTy[i] += row[i] * c.y;
+      for (let j = 0; j < D; j++) XTX[i][j] += row[i] * row[j];
+    }
+  }
+  const sol = gaussElim(XTX, XTy);
+  if (!sol) return null;
+  return { w: sol.slice(0, 8), bias: sol[8] };
+}
+
 // ── 2D linear regression (for projected line drawing) ─────────────────────────
 function linReg2D(pts) {
   const n = pts.length;
@@ -333,6 +364,20 @@ function ransacStep() {
   ransacTimer = setTimeout(ransacStep, 80);
 }
 
+function resetRANSACState() {
+  if (ransacTimer) { clearTimeout(ransacTimer); ransacTimer = null; }
+  S.running = false; S.done = false;
+  S.currentIter = 0; S.bestConsensus = 0;
+  S.bestSet = new Set(); S.bestWeights = null;
+  formulaPanel.classList.remove('visible');
+  resultBanner.classList.remove('visible');
+  progressBar.style.width = '0%';
+  statIter.textContent = '—'; statCons.textContent = '—';
+  statMax.textContent  = '—'; statResid.textContent = '—';
+  btnRun.disabled = false;
+  btnRun.textContent = I18N[S.lang].btnRun;
+}
+
 function triggerGlow() {
   glowEl.style.opacity = '1';
   setTimeout(() => { glowEl.style.opacity = '0'; }, 280);
@@ -344,6 +389,12 @@ function finishRANSAC() {
   btnRun.disabled = false;
   btnRun.textContent = I18N[S.lang].btnRunAgain;
 
+  // Refit with least squares on the full best consensus set
+  if (S.bestSet.size >= RANSAC_K) {
+    const refined = leastSquares([...S.bestSet]);
+    if (refined) { S.bestWeights = refined.w; S.bestBias = refined.bias; }
+  }
+
   if (S.bestWeights) renderFormula();
 
   resultSub.textContent = I18N[S.lang].resultSub(S.bestConsensus, S.maxIter);
@@ -351,24 +402,41 @@ function finishRANSAC() {
   setTimeout(() => resultBanner.classList.remove('visible'), 3500);
 }
 
-function renderFormula() {
-  const t = I18N[S.lang];
-  const weightLines = S.bestWeights.map((w, i) => {
+function weightBlock(weights, bias, colorVar, dimClickable, t) {
+  const lines = weights.map((w, i) => {
     const sign = w >= 0 ? '+' : '';
-    return `<div class="formula-line" data-dim="${i}">`
-         + `<span class="fl-weight">${sign}${w.toFixed(3)}</span>`
+    const attrs = dimClickable ? ` data-dim="${i}"` : '';
+    return `<div class="formula-line"${attrs}>`
+         + `<span class="fl-weight" style="color:${colorVar}">${sign}${w.toFixed(3)}</span>`
          + ` × `
          + `<span class="fl-name">${DIMS[i].short}</span>`
          + `</div>`;
   }).join('');
-  const biasSign = S.bestBias >= 0 ? '+' : '';
+  const biasSign = bias >= 0 ? '+' : '';
+  return `<div class="fl-label">Y =</div>`
+       + lines
+       + `<div class="formula-line fl-bias">`
+       + `<span class="fl-weight" style="color:${colorVar}">${biasSign}${bias.toFixed(3)}</span>`
+       + ` <span style="color:var(--text-sub);font-size:0.58rem">${t.formulaBias}</span>`
+       + `</div>`;
+}
+
+function renderFormula() {
+  const t = I18N[S.lang];
+  const gtHtml = weightBlock(S.wTrue, S.bTrue, '#9b7bb5', false, t);
+  const ransacHtml = weightBlock(S.bestWeights, S.bestBias, '#FF8B94', true, t);
+
   formulaText.innerHTML =
-    `<div class="fl-label">Y =</div>`
-    + weightLines
-    + `<div class="formula-line fl-bias">`
-    + `<span class="fl-weight">${biasSign}${S.bestBias.toFixed(3)}</span>`
-    + ` <span style="color:var(--text-sub);font-size:0.58rem">${t.formulaBias}</span>`
+    `<div class="formula-section">`
+    + `<div class="formula-section-title" style="color:#9b7bb5">${t.formulaGTLabel}</div>`
+    + gtHtml
+    + `</div>`
+    + `<div class="formula-divider"></div>`
+    + `<div class="formula-section">`
+    + `<div class="formula-section-title" style="color:#FF8B94">${t.formulaRANSACLabel}</div>`
+    + ransacHtml
     + `</div>`;
+
   formulaPanel.classList.add('visible');
   bindFormulaHover();
 }
@@ -566,7 +634,7 @@ function bindFormulaHover() {
 // ── Modal content ─────────────────────────────────────────────────────────────
 const MODAL = {
   en: `
-<p><strong>RANSAC (Random Sample Consensus)</strong> is a robust estimation algorithm that fits a model to noisy, outlier-contaminated data. Here we use it to identify 20 "soul-match" inliers among 100 candidates in an 8-dimensional feature space.</p>
+<p><strong>RANSAC (Random Sample Consensus)</strong> is a robust estimation algorithm that fits a model to noisy, outlier-contaminated data. Here we use it to identify 50 "soul-match" inliers among 100 candidates in an 8-dimensional feature space.</p>
 <p><strong>Ground Truth:</strong> Each candidate has an 8-D feature vector $\\mathbf{x} \\in \\mathbb{R}^8$. The hidden compatibility score follows:</p>
 <p>$$Y = \\mathbf{w}_{\\text{true}}^\\top \\mathbf{x} + b + \\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0, \\sigma^2)$$</p>
 <p>Outliers have random $Y$ values uncorrelated with $\\mathbf{x}$.</p>
@@ -625,10 +693,10 @@ const MODAL = {
 <p>2. Solve the linear system $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$ via Gaussian elimination, where each row is $[x_1,\\ldots,x_8,\\, 1]$.</p>
 <p>3. Compute per-point residuals: $r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus set: $\\mathcal{C} = \\{i : r_i < \\tau\\}$. If $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$, update the best model.</p>
-<p><strong>Why it works:</strong> With inlier fraction $\\rho = 0.2$, the probability of drawing $k=9$ inliers is $\\rho^9 \\approx 5 \\times 10^{-7}$—very small. But after $T$ iterations the success probability reaches $1 - (1-\\rho^9)^T$. In practice, even partial inlier contamination yields a large consensus set that grows quickly above the outlier baseline.</p>
+<p><strong>Why it works:</strong> With inlier fraction $\\rho = 0.5$, the probability of drawing $k=9$ pure inliers is $\\rho^9 \\approx 0.002$. After $T$ iterations the success probability reaches $1 - (1-\\rho^9)^T$: at $T=100$ this is ~18%, at $T=500$ it exceeds 63%. After RANSAC identifies the best consensus set, we additionally refit with <strong>Ordinary Least Squares</strong> on all consensus members — this dramatically sharpens the final weights even from an imperfect initial sample.</p>
 `,
   zhTW: `
-<p><strong>RANSAC（隨機樣本共識）</strong>是一種強健的模型估計演算法，可在含有大量 Outlier 的資料中找出正確模型。這裡我們用它在 8 維特徵空間中，從 100 位候選人裡揪出 20 位「真愛戰士」。</p>
+<p><strong>RANSAC（隨機樣本共識）</strong>是一種強健的模型估計演算法，可在含有大量 Outlier 的資料中找出正確模型。這裡我們用它在 8 維特徵空間中，從 100 位候選人裡揪出 50 位「真愛戰士」。</p>
 <p><strong>真理定義：</strong>每位候選人有一個 8 維特徵向量 $\\mathbf{x} \\in \\mathbb{R}^8$。隱藏的相容性分數符合：</p>
 <p>$$Y = \\mathbf{w}_{\\text{true}}^\\top \\mathbf{x} + b + \\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0, \\sigma^2)$$</p>
 <p>Outlier 的 $Y$ 值是隨機的，與 $\\mathbf{x}$ 毫無關聯。</p>
@@ -687,7 +755,7 @@ const MODAL = {
 <p>2. 用高斯消去法解線性方程組 $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$，每列為 $[x_1,\\ldots,x_8,\\, 1]$。</p>
 <p>3. 計算所有點的殘差：$r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus Set：$\\mathcal{C} = \\{i : r_i < \\tau\\}$。若 $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$ 則更新最佳模型。</p>
-<p><strong>為什麼有效：</strong>Inlier 比例 $\\rho = 0.2$，一次抽到 $k=9$ 個 Inlier 的機率為 $\\rho^9 \\approx 5 \\times 10^{-7}$，看似渺茫。但即使只有部分 Inlier 進入樣本，模型仍能涵蓋大量真愛戰士，讓 Consensus Set 遠超 Outlier 的隨機基準，迭代足夠多次後即可找到最大共識集。</p>
+<p><strong>為什麼有效：</strong>Inlier 比例 $\\rho = 0.5$，一次抽到 $k=9$ 個純 Inlier 的機率為 $\\rho^9 \\approx 0.002$。成功機率公式為 $1-(1-\\rho^9)^T$：$T=100$ 時約 18%，$T=500$ 時超過 63%。此外，找到最佳 Consensus Set 後，會對其所有成員執行<strong>普通最小二乘法（OLS）</strong>重新擬合，大幅提升最終權重精度。</p>
 `,
 };
 
@@ -729,26 +797,35 @@ btnTruth.addEventListener('click',    () => toggleBtn(btnTruth,    'showTruth'))
 ctrlIter.addEventListener('input',   () => { valIter.textContent   = ctrlIter.value; });
 ctrlThresh.addEventListener('input', () => { valThresh.textContent = ctrlThresh.value; });
 
+ctrlSouls.addEventListener('input', () => {
+  valSouls.textContent = ctrlSouls.value;
+  S.nInliers = +ctrlSouls.value;
+  resetRANSACState();
+  generateData();
+  updateTargets();
+  S.positions = S.targets.map(t => ({ ...t }));
+});
+
+resetBtn.addEventListener('click', () => {
+  ctrlIter.value    = DEFAULTS.maxIter;   valIter.textContent   = DEFAULTS.maxIter;
+  ctrlThresh.value  = DEFAULTS.threshold; valThresh.textContent = DEFAULTS.threshold;
+  ctrlSouls.value   = DEFAULTS.nInliers;  valSouls.textContent  = DEFAULTS.nInliers;
+  S.nInliers = DEFAULTS.nInliers;
+  resetRANSACState();
+  generateData();
+  updateTargets();
+  S.positions = S.targets.map(t => ({ ...t }));
+});
+
 btnRun.addEventListener('click', () => {
   if (S.running) return;
-  if (ransacTimer) clearTimeout(ransacTimer);
+  resetRANSACState();
 
-  S.running      = true;
-  S.done         = false;
-  S.currentIter  = 0;
-  S.bestConsensus= 0;
-  S.bestSet      = new Set();
-  S.bestWeights  = null;
-  S.maxIter      = +ctrlIter.value;
-  S.threshold    = +ctrlThresh.value / 100;
+  S.running   = true;
+  S.maxIter   = +ctrlIter.value;
+  S.threshold = +ctrlThresh.value / 100;
+  S.nInliers  = +ctrlSouls.value;
 
-  formulaPanel.classList.remove('visible');
-  resultBanner.classList.remove('visible');
-  progressBar.style.width = '0%';
-  statIter.textContent  = '—';
-  statCons.textContent  = '—';
-  statMax.textContent   = '—';
-  statResid.textContent = '—';
   btnRun.disabled = true;
   btnRun.textContent = I18N[S.lang].btnRunning;
 
