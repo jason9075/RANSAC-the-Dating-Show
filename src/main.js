@@ -132,9 +132,6 @@ const I18N = {
     legendConsensus:'RANSAC consensus',
     resultTitle:    '💘 True Love Found!',
     resultSub:      (n, t) => `${n} soul matches found in ${t} iterations`,
-    formulaBias:       '(bias)',
-    formulaGTLabel:    '🔮 Ground Truth',
-    formulaRANSACLabel:'🎯 RANSAC Estimate',
     errSection:      'Residual (all candidates)',
     errInlierSection:'Residual (true inliers)',
     errMin:          'Min',
@@ -172,9 +169,6 @@ const I18N = {
     legendConsensus:'RANSAC 共識集',
     resultTitle:    '💘 真愛現身！',
     resultSub:      (n, t) => `在 ${t} 次迭代中找到 ${n} 位真愛戰士`,
-    formulaBias:       '（截距）',
-    formulaGTLabel:    '🔮 真理權重',
-    formulaRANSACLabel:'🎯 RANSAC 估計',
     errSection:      '殘差（所有候選人）',
     errInlierSection:'殘差（真愛戰士）',
     errMin:          '最小',
@@ -424,7 +418,7 @@ function renderFormula() {
   const fmt  = w => (w >= 0 ? '+' : '') + w.toFixed(3);
   const fmtE = v => v.toFixed(4);
   const dash = `<span style="color:var(--text-sub)">—</span>`;
-  const biasLabel = S.lang === 'zh' ? '截距' : 'bias';
+  const biasLabel = S.lang === 'zh' ? 'bias' : 'bias';
 
   // Weight rows
   const rowsHtml = DIMS.map((d, i) => {
@@ -760,6 +754,7 @@ const MODAL = {
 <p>3. Compute per-point residuals: $r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus set: $\\mathcal{C} = \\{i : r_i < \\tau\\}$. If $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$, update the best model.</p>
 <p><strong>What is a Residual?</strong> The residual $r_i$ measures how wrong the model is for candidate $i$ — specifically, the absolute gap between the candidate's actual compatibility score $y_i$ and the score the current model would predict: $\\hat{y}_i = \\hat{\\mathbf{w}}^\\top \\mathbf{x}_i + \\hat{b}$. A small residual means the model explains this candidate well (likely a true soul match); a large residual means the model cannot account for their score (likely an outlier playing pretend). The threshold $\\tau$ is the cutoff: anyone with $r_i &lt; \\tau$ gets admitted into the consensus set. The <em>Min / Max / Avg</em> residuals shown in the True Love Formula panel are computed over all 100 candidates using the final fitted model — a low average with a tight range indicates the model has genuinely found the hyperplane of love.</p>
+<p><strong>Residual, MAE, and L1 Loss.</strong> Each residual $r_i = |y_i - \\hat{y}_i|$ is a single absolute error. In machine learning this maps directly to two familiar quantities: <strong>MAE (Mean Absolute Error)</strong> $= \\frac{1}{N}\\sum_i r_i$ is exactly the <em>Avg</em> residual shown in the True Love Formula panel, while <strong>L1 Loss</strong> $= \\sum_i r_i$ is just $N \\times$ MAE. Both treat every error linearly — doubling the error doubles the penalty. This makes them naturally robust to outliers. By contrast, <strong>MSE / L2 Loss</strong> $= \\sum_i r_i^2$ squares each error, so a single large outlier can dominate the entire loss and pull the fitted model off course. The OLS refitting step in this demo minimises L2 loss on the consensus set — which is safe precisely because RANSAC has already evicted the outliers before OLS runs.</p>
 <p><strong>What is the Threshold τ?</strong> The threshold $\\tau$ is the tolerance you grant to each candidate when deciding whether they "fit" the current model. After computing the residual $r_i$ for every candidate, only those with $r_i &lt; \\tau$ are admitted into the consensus set. Setting $\\tau$ too small means almost nobody qualifies and RANSAC struggles to build any consensus at all. Setting $\\tau$ too large lets outliers sneak in, polluting the consensus set and degrading the final model. In this demo the slider maps 1–30 linearly to $\\tau = 0.01$–$0.30$ in the normalized $Y$ space (which lives in $[0, 1]$), so the default value of 5 means "accept any candidate whose predicted compatibility is within ±0.05 of their actual score" — roughly 1.7× the maximum inlier noise level.</p>
 <p><strong>Why it works:</strong> Let $\\rho$ be the inlier fraction (adjustable via the Soul Matchers slider). The probability of drawing $k=9$ pure inliers in one sample is $\\rho^9$. After $T$ iterations the success probability reaches $1 - (1-\\rho^9)^T$. For example at $\\rho=0.5$: $T=100$ gives ~18%, $T=500$ exceeds 63%. After RANSAC identifies the best consensus set, we additionally refit with <strong>Ordinary Least Squares</strong> on all consensus members — this dramatically sharpens the final weights even from an imperfect initial sample.</p>
 `,
@@ -824,6 +819,7 @@ const MODAL = {
 <p>3. 計算所有點的殘差：$r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus Set：$\\mathcal{C} = \\{i : r_i < \\tau\\}$。若 $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$ 則更新最佳模型。</p>
 <p><strong>殘差（Residual）是什麼？</strong>殘差 $r_i$ 衡量目前模型對第 $i$ 位候選人的預測誤差，即實際相容分數 $y_i$ 與模型預測值 $\\hat{y}_i = \\hat{\\mathbf{w}}^\\top \\mathbf{x}_i + \\hat{b}$ 之間的絕對差距。殘差小 → 模型能解釋這位候選人的分數 → 很可能是真愛戰士；殘差大 → 模型無法說明其分數 → 很可能是演技派。閾值 $\\tau$ 是入圍門檻：只要 $r_i &lt; \\tau$ 就能進入 Consensus Set。True Love Formula 面板下方顯示的 <em>最小 / 最大 / 平均</em>殘差，是用最終擬合模型對全部 100 位候選人計算的——平均值低且範圍緊表示模型確實找到了那條愛的超平面。</p>
+<p><strong>Residual 與 MAE、L1 Loss 的關係。</strong>每個殘差 $r_i = |y_i - \\hat{y}_i|$ 就是單一資料點的絕對誤差。對應到機器學習中常見的兩個指標：<strong>MAE（平均絕對誤差）</strong> $= \\frac{1}{N}\\sum_i r_i$，正好就是 True Love Formula 面板顯示的 <em>平均</em>殘差；<strong>L1 Loss</strong> $= \\sum_i r_i$ 則是 MAE 的 $N$ 倍（未做平均）。兩者都對誤差保持線性懲罰——誤差加倍，Loss 也加倍——因此對 Outlier 天然具備較強的抗干擾性。相比之下，<strong>MSE / L2 Loss</strong> $= \\sum_i r_i^2$ 對每個誤差取平方，單一巨大的 Outlier 就能主導整個 Loss，把模型拉偏。這個 demo 的 OLS 重新擬合步驟最小化的是 L2 Loss——但此時 RANSAC 已事先清除 Outlier，所以在乾淨的 Consensus Set 上跑 OLS 仍是安全的。</p>
 <p><strong>Threshold τ 是什麼？</strong>閾值 $\\tau$ 是判斷某位候選人「算不算支持目前模型」的容忍距離。計算出每位候選人的殘差 $r_i$ 後，只有 $r_i &lt; \\tau$ 的人才能進入 Consensus Set。$\\tau$ 設太小 → 幾乎沒人達標，RANSAC 難以建立共識；$\\tau$ 設太大 → Outlier 也能混入，污染 Consensus Set，最終模型失準。在這個介面中，滑桿範圍 1–30 線性對應 $\\tau = 0.01$–$0.30$（單位是正規化後的 $Y$ 空間，值域 $[0, 1]$），因此預設滑桿值 5 代表：「預測相容性分數與實際分數相差在 ±0.05 以內的候選人都算符合」，約為 Inlier 最大雜訊的 1.7 倍，留有適當餘裕又不易被 Outlier 污染。</p>
 <p><strong>為什麼有效：</strong>設 $\\rho$ 為 Inlier 比例（可透過 Soul Matchers 滑桿調整）。一次抽到 $k=9$ 個純 Inlier 的機率為 $\\rho^9$，成功機率公式為 $1-(1-\\rho^9)^T$。以 $\\rho=0.5$ 為例：$T=100$ 時約 18%，$T=500$ 時超過 63%。此外，找到最佳 Consensus Set 後，會對其所有成員執行<strong>普通最小二乘法（OLS）</strong>重新擬合，大幅提升最終權重精度。</p>
 `,
