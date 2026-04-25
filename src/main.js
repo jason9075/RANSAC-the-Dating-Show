@@ -2,14 +2,22 @@
 
 // ── Dimension definitions ──────────────────────────────────────────────────────
 const DIMS = [
-  { key: 'cilantro',  label: 'Cilantro Tolerance',        short: 'Cilantro',  min: 0,  max: 100, unit: '' },
-  { key: 'invoice',   label: 'Cloud Invoice Rate',         short: 'Invoice',   min: 0,  max: 100, unit: '%' },
-  { key: 'threads',   label: 'Threads Shitposting Idx',   short: 'Threads',   min: 0,  max: 20,  unit: '/day' },
-  { key: 'actemp',    label: 'AC Temp Preference',         short: 'AC Temp',   min: 16, max: 30,  unit: '°C' },
-  { key: 'mysticism', label: 'Mysticism Belief',           short: 'Mysticism', min: 0,  max: 100, unit: '' },
-  { key: 'mute',      label: 'Mute Speed',                 short: 'Mute',      min: 0,  max: 60,  unit: 's' },
-  { key: 'ghosting',  label: 'Ghosting Resilience',        short: 'Ghosting',  min: 1,  max: 10,  unit: '' },
-  { key: 'dotfiles',  label: 'Dotfiles Authenticity',      short: 'Dotfiles',  min: 0,  max: 100, unit: '' },
+  { key: 'cilantro',  label: 'Cilantro Tolerance',        short: 'Cilantro',  min: 0,  max: 100, unit: '',
+    tip: 'Score 0 = "get that soap away from me." Score 100 = orders extra cilantro on everything. The ultimate culinary dealbreaker — no algorithm can bridge this gap.' },
+  { key: 'invoice',   label: 'Cloud Invoice Rate',         short: 'Invoice',   min: 0,  max: 100, unit: '%',
+    tip: 'How often do you use the e-invoice carrier instead of taking a paper receipt? A proxy for civic responsibility, tax-law awareness, and whether your phone was made after 2018.' },
+  { key: 'threads',   label: 'Threads Shitposting Idx',   short: 'Threads',   min: 0,  max: 20,  unit: '/day',
+    tip: 'Daily volume of low-effort content fired into the void. 0 = lurker with opinions. 20 = chronically online. Your soul match posts at exactly the same frequency — no more, no less.' },
+  { key: 'actemp',    label: 'AC Temp Preference',         short: 'AC Temp',   min: 16, max: 30,  unit: '°C',
+    tip: 'The thermostat is the #1 source of relationship conflict. 16°C = penguin mode. 30°C = "why is the AC even on?" A 2°C gap is negotiable; 8°C is a dealbreaker.' },
+  { key: 'mysticism', label: 'Mysticism Belief',           short: 'Mysticism', min: 0,  max: 100, unit: '',
+    tip: 'How much do you believe Mercury retrograde ruined your pull request? 0 = "correlation ≠ causation." 100 = won\'t make decisions on a void-of-course moon. Extreme mismatch causes irreconcilable epistemological differences.' },
+  { key: 'mute',      label: 'Mute Speed',                 short: 'Mute',      min: 0,  max: 60,  unit: 's',
+    tip: 'Seconds until you mute the family group chat after a new message appears. 0 = reflexive mute (you are spiritually exhausted). 60 = masochist who reads every forward. A shared mute strategy is the bedrock of domestic peace.' },
+  { key: 'ghosting',  label: 'Ghosting Resilience',        short: 'Ghosting',  min: 1,  max: 10,  unit: '',
+    tip: 'Recovery speed after being left on read. 1 = still refreshing their profile two years later. 10 = "who? anyway, here\'s my new side project." High resilience is admirable; a perfect 10 may indicate emotional unavailability.' },
+  { key: 'dotfiles',  label: 'Dotfiles Authenticity',      short: 'Dotfiles',  min: 0,  max: 100, unit: '',
+    tip: 'What % of things you call "your own work" did you actually produce? 0 = pasted ChatGPT output, changed the font, submitted as original. 100 = can explain every line without looking at the source. Your soul match operates at exactly the same level of plausible deniability.' },
 ];
 
 const N_TOTAL   = 100;
@@ -244,13 +252,24 @@ function finishRANSAC() {
   btnRun.textContent = '▶ Run Again';
 
   if (S.bestWeights) {
-    const lines = S.bestWeights.map((w, i) =>
-      `${w >= 0 ? '+' : ''}${w.toFixed(3)} × ${DIMS[i].short}`
-    );
-    formulaText.textContent =
-      'Y = ' + lines.join('\n    ') +
-      `\n    ${S.bestBias >= 0 ? '+' : ''}${S.bestBias.toFixed(3)}`;
+    const weightLines = S.bestWeights.map((w, i) => {
+      const sign = w >= 0 ? '+' : '';
+      return `<div class="formula-line" data-dim="${i}">`
+           + `<span class="fl-weight">${sign}${w.toFixed(3)}</span>`
+           + ` × `
+           + `<span class="fl-name">${DIMS[i].short}</span>`
+           + `</div>`;
+    }).join('');
+    const biasSign = S.bestBias >= 0 ? '+' : '';
+    formulaText.innerHTML =
+      `<div class="fl-label">Y =</div>`
+      + weightLines
+      + `<div class="formula-line fl-bias">`
+      + `<span class="fl-weight">${biasSign}${S.bestBias.toFixed(3)}</span>`
+      + ` <span style="color:var(--text-sub);font-size:0.58rem">(bias)</span>`
+      + `</div>`;
     formulaPanel.classList.add('visible');
+    bindFormulaHover();
   }
 
   resultSub.textContent = `${S.bestConsensus} soul matches found in ${S.maxIter} iterations`;
@@ -421,6 +440,28 @@ function showTooltip(idx, clientX, clientY) {
   tooltip.style.left = `${left}px`;
   tooltip.style.top  = `${top}px`;
   tooltip.classList.add('visible');
+}
+
+// ── Formula hover ─────────────────────────────────────────────────────────────
+function bindFormulaHover() {
+  formulaText.querySelectorAll('.formula-line[data-dim]').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const d = DIMS[+el.dataset.dim];
+      if (!d) return;
+      const rect = el.getBoundingClientRect();
+      tooltip.innerHTML =
+        `<div class="tt-title">${d.label} <span style="font-weight:400;color:var(--text-sub)">(${d.min}–${d.max}${d.unit})</span></div>`
+        + `<div style="margin-top:0.2rem;line-height:1.6">${d.tip}</div>`;
+      let left = rect.right + 10;
+      let top  = rect.top - 8;
+      if (left + 260 > window.innerWidth) left = rect.left - 270;
+      if (top  + 120 > window.innerHeight) top = window.innerHeight - 130;
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top  = `${top}px`;
+      tooltip.classList.add('visible');
+    });
+    el.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+  });
 }
 
 // ── Modal content ─────────────────────────────────────────────────────────────

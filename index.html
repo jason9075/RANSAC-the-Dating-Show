@@ -286,10 +286,22 @@
     /* Formula */
     #formula-panel { display: none; }
     #formula-panel.visible { display: block; }
-    #formula-text {
-      font-size: 0.6rem; color: var(--text);
-      line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+    #formula-text { font-size: 0.62rem; color: var(--text); line-height: 1.75; }
+
+    .fl-label { font-weight: 800; color: var(--inlier); margin-bottom: 0.1rem; }
+    .fl-weight { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .formula-line {
+      padding: 0.18rem 0.4rem;
+      border-radius: 8px;
+      cursor: default;
+      transition: background 0.15s;
+      display: flex; align-items: center; gap: 0.2rem;
     }
+    .formula-line[data-dim]:hover {
+      background: rgba(255,139,148,0.12);
+    }
+    .formula-line[data-dim]:hover .fl-name { color: var(--inlier); font-weight: 700; }
+    .fl-bias { color: var(--text-sub); }
 
     /* ── Tooltip ── */
     #tooltip {
@@ -301,7 +313,7 @@
       font-size: 0.66rem; color: var(--text);
       box-shadow: 0 8px 24px rgba(255,139,148,0.12);
       z-index: 100; opacity: 0; transition: opacity 0.15s;
-      max-width: 220px; line-height: 1.7;
+      max-width: 280px; line-height: 1.7;
     }
     #tooltip.visible { opacity: 1; }
     #tooltip .tt-title { font-weight: 800; color: var(--inlier); margin-bottom: 0.28rem; font-size: 0.7rem; }
