@@ -369,13 +369,13 @@ function resetRANSACState() {
   S.running = false; S.done = false;
   S.currentIter = 0; S.bestConsensus = 0;
   S.bestSet = new Set(); S.bestWeights = null;
-  formulaPanel.classList.remove('visible');
   resultBanner.classList.remove('visible');
   progressBar.style.width = '0%';
   statIter.textContent = '—'; statCons.textContent = '—';
   statMax.textContent  = '—'; statResid.textContent = '—';
   btnRun.disabled = false;
   btnRun.textContent = I18N[S.lang].btnRun;
+  renderFormula(); // show GT weights; RANSAC column resets to "—"
 }
 
 function triggerGlow() {
@@ -402,40 +402,35 @@ function finishRANSAC() {
   setTimeout(() => resultBanner.classList.remove('visible'), 3500);
 }
 
-function weightBlock(weights, bias, colorVar, dimClickable, t) {
-  const lines = weights.map((w, i) => {
-    const sign = w >= 0 ? '+' : '';
-    const attrs = dimClickable ? ` data-dim="${i}"` : '';
-    return `<div class="formula-line"${attrs}>`
-         + `<span class="fl-weight" style="color:${colorVar}">${sign}${w.toFixed(3)}</span>`
-         + ` × `
-         + `<span class="fl-name">${DIMS[i].short}</span>`
-         + `</div>`;
-  }).join('');
-  const biasSign = bias >= 0 ? '+' : '';
-  return `<div class="fl-label">Y =</div>`
-       + lines
-       + `<div class="formula-line fl-bias">`
-       + `<span class="fl-weight" style="color:${colorVar}">${biasSign}${bias.toFixed(3)}</span>`
-       + ` <span style="color:var(--text-sub);font-size:0.58rem">${t.formulaBias}</span>`
-       + `</div>`;
-}
-
 function renderFormula() {
   const t = I18N[S.lang];
-  const gtHtml = weightBlock(S.wTrue, S.bTrue, '#9b7bb5', false, t);
-  const ransacHtml = weightBlock(S.bestWeights, S.bestBias, '#FF8B94', true, t);
+  const fmt = w => (w >= 0 ? '+' : '') + w.toFixed(3);
+  const dash = `<span style="color:var(--text-sub)">—</span>`;
+  const biasLabel = S.lang === 'zh' ? '截距' : 'bias';
+
+  const rowsHtml = DIMS.map((d, i) => {
+    const estCell = S.bestWeights
+      ? `<span class="ft-est">${fmt(S.bestWeights[i])}</span>`
+      : dash;
+    return `<tr data-dim="${i}">`
+      + `<td>${d.short}</td>`
+      + `<td><span class="ft-gt">${fmt(S.wTrue[i])}</span></td>`
+      + `<td>${estCell}</td>`
+      + `</tr>`;
+  }).join('');
+
+  const biasEstCell = S.bestWeights
+    ? `<span class="ft-est">${fmt(S.bestBias)}</span>` : dash;
 
   formulaText.innerHTML =
-    `<div class="formula-section">`
-    + `<div class="formula-section-title" style="color:#9b7bb5">${t.formulaGTLabel}</div>`
-    + gtHtml
-    + `</div>`
-    + `<div class="formula-divider"></div>`
-    + `<div class="formula-section">`
-    + `<div class="formula-section-title" style="color:#FF8B94">${t.formulaRANSACLabel}</div>`
-    + ransacHtml
-    + `</div>`;
+    `<table class="formula-table"><thead><tr>`
+    + `<th></th><th style="color:#9b7bb5">🔮 GT</th><th style="color:#FF8B94">🎯 Est</th>`
+    + `</tr></thead><tbody>`
+    + rowsHtml
+    + `<tr class="ft-bias"><td>${biasLabel}</td>`
+    + `<td><span class="ft-gt">${fmt(S.bTrue)}</span></td>`
+    + `<td>${biasEstCell}</td></tr>`
+    + `</tbody></table>`;
 
   formulaPanel.classList.add('visible');
   bindFormulaHover();
@@ -608,8 +603,8 @@ function showTooltip(idx, clientX, clientY) {
 
 // ── Formula hover ─────────────────────────────────────────────────────────────
 function bindFormulaHover() {
-  formulaText.querySelectorAll('.formula-line[data-dim]').forEach(el => {
-    el.addEventListener('mouseenter', e => {
+  formulaText.querySelectorAll('tr[data-dim]').forEach(el => {
+    el.addEventListener('mouseenter', () => {
       const d = DIMS[+el.dataset.dim];
       if (!d) return;
       const rect = el.getBoundingClientRect();
@@ -619,9 +614,9 @@ function bindFormulaHover() {
       tooltip.innerHTML =
         `<div class="tt-title">${title} <span style="font-weight:400;color:var(--text-sub)">(${d.min}–${d.max}${d.unit})</span></div>`
         + `<div style="margin-top:0.2rem;line-height:1.6">${body}</div>`;
-      let left = rect.right + 10;
+      let left = rect.left - 275;
       let top  = rect.top - 8;
-      if (left + 260 > window.innerWidth) left = rect.left - 270;
+      if (left < 0) left = rect.right + 10;
       if (top  + 120 > window.innerHeight) top = window.innerHeight - 130;
       tooltip.style.left = `${left}px`;
       tooltip.style.top  = `${top}px`;
@@ -853,7 +848,7 @@ mathModal.addEventListener('click', e => { if (e.target === mathModal) mathModal
 globalLangBtn.addEventListener('click', () => {
   S.lang = S.lang === 'en' ? 'zh' : 'en';
   applyLang();
-  if (S.done && S.bestWeights) renderFormula();
+  renderFormula();
 });
 
 window.addEventListener('resize', resizeCanvas);
@@ -871,6 +866,7 @@ function init() {
   resizeCanvas();
   S.positions = S.targets.map(t => ({ ...t }));
   updateAxisLabels();
+  renderFormula(); // show GT weights immediately on load
   requestAnimationFrame(render);
 }
 
