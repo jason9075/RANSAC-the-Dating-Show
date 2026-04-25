@@ -105,7 +105,7 @@ const globalLangBtn  = document.getElementById('global-lang-btn');
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
   en: {
-    subtitle:       'Finding true love in 8 dimensions | 100 candidates · 50 soul matches hidden within',
+    subtitle:       n => `Finding true love in 8 dimensions | 100 candidates·${n} soul matches hidden within`,
     panelAxes:      'Projection Axes',
     panelGod:       'God Mode',
     panelConfig:    'RANSAC Config',
@@ -135,12 +135,17 @@ const I18N = {
     formulaBias:       '(bias)',
     formulaGTLabel:    '🔮 Ground Truth',
     formulaRANSACLabel:'🎯 RANSAC Estimate',
+    errSection:      'Residual (all candidates)',
+    errInlierSection:'Residual (true inliers)',
+    errMin:          'Min',
+    errMax:          'Max',
+    errAvg:          'Avg',
     modalTitle:     'Math Behind the Scene',
     modalClose:     'Close ✕',
     langBtn:        '中文',
   },
   zh: {
-    subtitle:       '在 8 個維度中尋找真愛｜100 位候選人 · 50 位真愛戰士藏在其中',
+    subtitle:       n => `在 8 個維度中尋找真愛｜100 位候選人 · ${n} 位真愛戰士藏在其中`,
     panelAxes:      '投影軸',
     panelGod:       '上帝視角',
     panelConfig:    'RANSAC 設定',
@@ -170,19 +175,31 @@ const I18N = {
     formulaBias:       '（截距）',
     formulaGTLabel:    '🔮 真理權重',
     formulaRANSACLabel:'🎯 RANSAC 估計',
+    errSection:      '殘差（所有候選人）',
+    errInlierSection:'殘差（真愛戰士）',
+    errMin:          '最小',
+    errMax:          '最大',
+    errAvg:          '平均',
     modalTitle:     '頁面背後的數學',
     modalClose:     '關閉 ✕',
     langBtn:        'English',
   },
 };
 
+function updateSubtitle() {
+  const el = document.querySelector('[data-i18n="subtitle"]');
+  if (el) el.textContent = I18N[S.lang].subtitle(S.nInliers);
+}
+
 function applyLang() {
   const t = I18N[S.lang];
   document.querySelectorAll('[data-i18n]').forEach(el => {
     if (el === btnRun) return; // run button state managed separately
     const key = el.dataset.i18n;
+    if (key === 'subtitle') return; // handled by updateSubtitle()
     if (typeof t[key] === 'string') el.textContent = t[key];
   });
+  updateSubtitle();
   globalLangBtn.textContent = t.langBtn;
   mathBtn.title = S.lang === 'en' ? 'Explain the math' : '數學原理說明';
   // Update run button state text
@@ -404,33 +421,87 @@ function finishRANSAC() {
 
 function renderFormula() {
   const t = I18N[S.lang];
-  const fmt = w => (w >= 0 ? '+' : '') + w.toFixed(3);
+  const fmt  = w => (w >= 0 ? '+' : '') + w.toFixed(3);
+  const fmtE = v => v.toFixed(4);
   const dash = `<span style="color:var(--text-sub)">—</span>`;
   const biasLabel = S.lang === 'zh' ? '截距' : 'bias';
 
+  // Weight rows
   const rowsHtml = DIMS.map((d, i) => {
     const estCell = S.bestWeights
-      ? `<span class="ft-est">${fmt(S.bestWeights[i])}</span>`
-      : dash;
+      ? `<span class="ft-est">${fmt(S.bestWeights[i])}</span>` : dash;
     return `<tr data-dim="${i}">`
       + `<td>${d.short}</td>`
       + `<td><span class="ft-gt">${fmt(S.wTrue[i])}</span></td>`
-      + `<td>${estCell}</td>`
-      + `</tr>`;
+      + `<td>${estCell}</td></tr>`;
   }).join('');
 
   const biasEstCell = S.bestWeights
     ? `<span class="ft-est">${fmt(S.bestBias)}</span>` : dash;
 
+  // Residual stats helper
+  const computeStats = (weights, bias) => {
+    const res = S.candidates.map(c =>
+      Math.abs(c.y - c.norm.reduce((s, x, j) => s + weights[j] * x, bias))
+    );
+    return {
+      min: Math.min(...res),
+      max: Math.max(...res),
+      avg: res.reduce((a, r) => a + r, 0) / res.length,
+    };
+  };
+  const gtSt  = computeStats(S.wTrue, S.bTrue);
+  const estSt = S.bestWeights ? computeStats(S.bestWeights, S.bestBias) : null;
+
+  // Inlier-only stats (filtered by ground truth isInlier flag)
+  const computeInlierStats = (weights, bias) => {
+    const res = S.candidates
+      .filter(c => c.isInlier)
+      .map(c => Math.abs(c.y - c.norm.reduce((s, x, j) => s + weights[j] * x, bias)));
+    if (res.length === 0) return null;
+    return {
+      min: Math.min(...res),
+      max: Math.max(...res),
+      avg: res.reduce((a, r) => a + r, 0) / res.length,
+    };
+  };
+  const gtInSt  = computeInlierStats(S.wTrue, S.bTrue);
+  const estInSt = S.bestWeights ? computeInlierStats(S.bestWeights, S.bestBias) : null;
+
+  const makeErrRows = (gtS, estS) => [
+    [t.errMin, gtS?.min, estS?.min],
+    [t.errMax, gtS?.max, estS?.max],
+    [t.errAvg, gtS?.avg, estS?.avg],
+  ].map(([label, gtV, estV]) =>
+    `<tr><td>${label}</td>`
+    + `<td><span class="ft-gt">${gtV != null ? fmtE(gtV) : '—'}</span></td>`
+    + `<td>${estV != null ? `<span class="ft-est">${fmtE(estV)}</span>` : dash}</td></tr>`
+  ).join('');
+
+  const errTable = (title, gtS, estS) =>
+    `<div style="font-size:0.54rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-sub);margin-bottom:0.18rem">${title}</div>`
+    + `<table class="formula-table"><thead><tr>`
+    + `<th></th><th style="color:#9b7bb5">🔮 GT</th><th style="color:#FF8B94">🎯 Est</th>`
+    + `</tr></thead><tbody>${makeErrRows(gtS, estS)}</tbody></table>`;
+
   formulaText.innerHTML =
-    `<table class="formula-table"><thead><tr>`
+    // Formula expression
+    `<div style="text-align:center;font-size:0.57rem;color:var(--text-sub);margin-bottom:0.35rem;letter-spacing:0.02em">Y = Σ wᵢxᵢ + b</div>`
+    // Weight table
+    + `<table class="formula-table"><thead><tr>`
     + `<th></th><th style="color:#9b7bb5">🔮 GT</th><th style="color:#FF8B94">🎯 Est</th>`
     + `</tr></thead><tbody>`
     + rowsHtml
     + `<tr class="ft-bias"><td>${biasLabel}</td>`
     + `<td><span class="ft-gt">${fmt(S.bTrue)}</span></td>`
     + `<td>${biasEstCell}</td></tr>`
-    + `</tbody></table>`;
+    + `</tbody></table>`
+    // All-candidate residuals
+    + `<div style="height:1px;background:var(--panel-border);margin:0.42rem 0 0.32rem"></div>`
+    + errTable(t.errSection, gtSt, estSt)
+    // Inlier-only residuals
+    + `<div style="height:1px;background:var(--panel-border);margin:0.42rem 0 0.32rem"></div>`
+    + errTable(t.errInlierSection, gtInSt, estInSt);
 
   formulaPanel.classList.add('visible');
   bindFormulaHover();
@@ -688,6 +759,7 @@ const MODAL = {
 <p>2. Solve the linear system $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$ via Gaussian elimination, where each row is $[x_1,\\ldots,x_8,\\, 1]$.</p>
 <p>3. Compute per-point residuals: $r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus set: $\\mathcal{C} = \\{i : r_i < \\tau\\}$. If $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$, update the best model.</p>
+<p><strong>What is a Residual?</strong> The residual $r_i$ measures how wrong the model is for candidate $i$ — specifically, the absolute gap between the candidate's actual compatibility score $y_i$ and the score the current model would predict: $\\hat{y}_i = \\hat{\\mathbf{w}}^\\top \\mathbf{x}_i + \\hat{b}$. A small residual means the model explains this candidate well (likely a true soul match); a large residual means the model cannot account for their score (likely an outlier playing pretend). The threshold $\\tau$ is the cutoff: anyone with $r_i &lt; \\tau$ gets admitted into the consensus set. The <em>Min / Max / Avg</em> residuals shown in the True Love Formula panel are computed over all 100 candidates using the final fitted model — a low average with a tight range indicates the model has genuinely found the hyperplane of love.</p>
 <p><strong>Why it works:</strong> With inlier fraction $\\rho = 0.5$, the probability of drawing $k=9$ pure inliers is $\\rho^9 \\approx 0.002$. After $T$ iterations the success probability reaches $1 - (1-\\rho^9)^T$: at $T=100$ this is ~18%, at $T=500$ it exceeds 63%. After RANSAC identifies the best consensus set, we additionally refit with <strong>Ordinary Least Squares</strong> on all consensus members — this dramatically sharpens the final weights even from an imperfect initial sample.</p>
 `,
   zhTW: `
@@ -750,6 +822,7 @@ const MODAL = {
 <p>2. 用高斯消去法解線性方程組 $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$，每列為 $[x_1,\\ldots,x_8,\\, 1]$。</p>
 <p>3. 計算所有點的殘差：$r_i = \\left| y_i - \\hat{\\boldsymbol{\\theta}}^\\top [\\mathbf{x}_i; 1] \\right|$</p>
 <p>4. Consensus Set：$\\mathcal{C} = \\{i : r_i < \\tau\\}$。若 $|\\mathcal{C}| > |\\mathcal{C}_{\\text{best}}|$ 則更新最佳模型。</p>
+<p><strong>殘差（Residual）是什麼？</strong>殘差 $r_i$ 衡量目前模型對第 $i$ 位候選人的預測誤差，即實際相容分數 $y_i$ 與模型預測值 $\\hat{y}_i = \\hat{\\mathbf{w}}^\\top \\mathbf{x}_i + \\hat{b}$ 之間的絕對差距。殘差小 → 模型能解釋這位候選人的分數 → 很可能是真愛戰士；殘差大 → 模型無法說明其分數 → 很可能是演技派。閾值 $\\tau$ 是入圍門檻：只要 $r_i &lt; \\tau$ 就能進入 Consensus Set。True Love Formula 面板下方顯示的 <em>最小 / 最大 / 平均</em>殘差，是用最終擬合模型對全部 100 位候選人計算的——平均值低且範圍緊表示模型確實找到了那條愛的超平面。</p>
 <p><strong>為什麼有效：</strong>Inlier 比例 $\\rho = 0.5$，一次抽到 $k=9$ 個純 Inlier 的機率為 $\\rho^9 \\approx 0.002$。成功機率公式為 $1-(1-\\rho^9)^T$：$T=100$ 時約 18%，$T=500$ 時超過 63%。此外，找到最佳 Consensus Set 後，會對其所有成員執行<strong>普通最小二乘法（OLS）</strong>重新擬合，大幅提升最終權重精度。</p>
 `,
 };
@@ -795,6 +868,7 @@ ctrlThresh.addEventListener('input', () => { valThresh.textContent = ctrlThresh.
 ctrlSouls.addEventListener('input', () => {
   valSouls.textContent = ctrlSouls.value;
   S.nInliers = +ctrlSouls.value;
+  updateSubtitle();
   resetRANSACState();
   generateData();
   updateTargets();
@@ -806,6 +880,7 @@ resetBtn.addEventListener('click', () => {
   ctrlThresh.value  = DEFAULTS.threshold; valThresh.textContent = DEFAULTS.threshold;
   ctrlSouls.value   = DEFAULTS.nInliers;  valSouls.textContent  = DEFAULTS.nInliers;
   S.nInliers = DEFAULTS.nInliers;
+  updateSubtitle();
   resetRANSACState();
   generateData();
   updateTargets();
@@ -866,6 +941,7 @@ function init() {
   resizeCanvas();
   S.positions = S.targets.map(t => ({ ...t }));
   updateAxisLabels();
+  updateSubtitle();
   renderFormula(); // show GT weights immediately on load
   requestAnimationFrame(render);
 }
