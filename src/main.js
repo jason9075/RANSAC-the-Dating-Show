@@ -430,6 +430,56 @@ const MODAL = {
 <p><strong>Ground Truth:</strong> Each candidate has an 8-D feature vector $\\mathbf{x} \\in \\mathbb{R}^8$. The hidden compatibility score follows:</p>
 <p>$$Y = \\mathbf{w}_{\\text{true}}^\\top \\mathbf{x} + b + \\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0, \\sigma^2)$$</p>
 <p>Outliers have random $Y$ values uncorrelated with $\\mathbf{x}$.</p>
+<p><strong>The 8 Dimensions of True Love (Feature Vector Field Guide):</strong></p>
+<table style="width:100%;border-collapse:collapse;font-size:0.75rem;margin-bottom:0.7rem;">
+  <thead><tr style="border-bottom:1px solid rgba(255,139,148,0.3);">
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">Dimension</th>
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">Range</th>
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">What it really tests</th>
+  </tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_1$ Cilantro Tolerance</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">Can you share a plate without gagging? The ultimate culinary dealbreaker. Score 0 = "get that soap away from me", Score 100 = ordering extra cilantro on everything.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_2$ Cloud Invoice Rate</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100%</td>
+      <td style="padding:0.32rem 0.5rem;">How often do you actually use the government e-invoice carrier instead of printing? A proxy for civic responsibility, tax-law awareness, and whether you own a smartphone made after 2018.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_3$ Threads Shitposting Idx</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 20 /day</td>
+      <td style="padding:0.32rem 0.5rem;">Daily volume of low-effort content fired into the void. 0 = lurker with opinions, 20 = chronically online. Your soul match posts exactly as much as you do—no more, no less.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_4$ AC Temp Preference</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">16 – 30 °C</td>
+      <td style="padding:0.32rem 0.5rem;">The thermostat is the number-one source of relationship conflict after the toilet seat. 16°C = penguin mode, 30°C = "why is the AC even on?" A 2°C gap is manageable; 8°C is a dealbreaker.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_5$ Mysticism Belief</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">How much do you believe Mercury retrograde ruined your pull request? 0 = "correlation ≠ causation" 100 = won't deploy on a void-of-course moon. Extreme mismatch causes irreconcilable epistemological differences.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_6$ Mute Speed</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 60 s</td>
+      <td style="padding:0.32rem 0.5rem;">Seconds until you mute the family/classmate group chat after a new message appears. 0 = reflexive mute (you're spiritually exhausted), 60 = masochist who reads every forward. A shared mute strategy is the bedrock of domestic peace.</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_7$ Ghosting Resilience</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">1 – 10</td>
+      <td style="padding:0.32rem 0.5rem;">Psychological recovery coefficient after being left on read. 1 = you're still refreshing their profile two years later, 10 = "who? anyway, here's my new project." High resilience is admirable; perfect score may indicate emotional unavailability.</td>
+    </tr>
+    <tr>
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Dotfiles Authenticity</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">What percentage of your Neovim/shell config did you actually write yourself vs. copy-paste from r/unixporn? 0 = a 4,000-line init.lua you've never read, 100 = you know exactly why every keybind exists. Partners compare dotfiles on the first date.</td>
+    </tr>
+  </tbody>
+</table>
 <p><strong>Algorithm (per iteration):</strong></p>
 <p>1. Draw a random sample $\\mathcal{S}$ of $k = 9$ candidates (minimum to solve for $\\mathbf{w} \\in \\mathbb{R}^8$ and $b$).</p>
 <p>2. Solve the linear system $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$ via Gaussian elimination, where each row is $[x_1,\\ldots,x_8,\\, 1]$.</p>
@@ -442,6 +492,56 @@ const MODAL = {
 <p><strong>真理定義：</strong>每位候選人有一個 8 維特徵向量 $\\mathbf{x} \\in \\mathbb{R}^8$。隱藏的相容性分數符合：</p>
 <p>$$Y = \\mathbf{w}_{\\text{true}}^\\top \\mathbf{x} + b + \\varepsilon, \\quad \\varepsilon \\sim \\mathcal{N}(0, \\sigma^2)$$</p>
 <p>Outlier 的 $Y$ 值是隨機的，與 $\\mathbf{x}$ 毫無關聯。</p>
+<p><strong>真愛的 8 個維度（特徵向量田野調查報告）：</strong></p>
+<table style="width:100%;border-collapse:collapse;font-size:0.75rem;margin-bottom:0.7rem;">
+  <thead><tr style="border-bottom:1px solid rgba(255,139,148,0.3);">
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">維度</th>
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">範圍</th>
+    <th style="text-align:left;padding:0.3rem 0.5rem;color:#FF8B94;">它真正在測什麼</th>
+  </tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_1$ 香菜耐受度</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">你能不能跟對方共用同一盤菜而不翻臉？0 分 = 「那是肥皂吧」，100 分 = 叫外送必加「香菜加倍」。飲食觀的根本分歧，任何演算法都難以彌合。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_2$ 發票載具使用率</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100%</td>
+      <td style="padding:0.32rem 0.5rem;">你有多常用手機載具而不是索取紙本？這個數字反映你的公民意識、對稅法的了解程度，以及你的手機是否在 2018 年之後製造。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_3$ Threads 廢文產出指數</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 20 篇/天</td>
+      <td style="padding:0.32rem 0.5rem;">每天發多少低努力含量的內容進虛空？0 = 有想法但只看不發，20 = 嚴重網路成癮。真愛的條件：對方發廢文的頻率跟你完全一致，不多也不少。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_4$ 空調偏好溫度</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">16 – 30 °C</td>
+      <td style="padding:0.32rem 0.5rem;">冷氣溫度是所有長期關係衝突的第一來源（略勝馬桶蓋）。16°C = 企鵝模式，30°C = 「冷氣開著幹嘛」。2°C 的差距還可以協商；超過 8°C 請直接分手。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_5$ 神祕學迷信程度</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">你有多相信水星逆行毀了你的 pull request？0 = 「相關性不等於因果」，100 = 月亮空亡不 deploy。極端不匹配會導致無法調和的認識論分歧，程式 debug 時尤其致命。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_6$ 群組靜音反射時間</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 60 秒</td>
+      <td style="padding:0.32rem 0.5rem;">家族群組或同學群組傳來新訊息後，你幾秒內靜音？0 = 反射動作（你已經精神疲憊），60 = 還在看完所有轉發訊息的受虐狂。共同的靜音策略是家庭和平的基石。</td>
+    </tr>
+    <tr style="border-bottom:1px solid rgba(178,172,136,0.15);">
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_7$ 被放鳥復原係數</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">1 – 10</td>
+      <td style="padding:0.32rem 0.5rem;">被已讀不回之後的心理復原速度。1 = 兩年後還在反覆看對方的限時動態，10 = 「誰？算了，來看我的新 side project」。高分令人欽佩；滿分可能代表迴避型依附。</td>
+    </tr>
+    <tr>
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Dotfiles 自研純度</td>
+      <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
+      <td style="padding:0.32rem 0.5rem;">你的 Neovim / shell 設定有多少百分比是你自己寫的，而不是從 r/unixporn 複製貼上的？0 = 四千行 init.lua 從未讀完，100 = 每個 keybind 都知道存在的理由。真正的情侶在第一次約會就會互 clone dotfiles。</td>
+    </tr>
+  </tbody>
+</table>
 <p><strong>演算法（每次迭代）：</strong></p>
 <p>1. 隨機抽取 $k = 9$ 位候選人組成樣本集 $\\mathcal{S}$（恰好足以求解 8 個權重 $\\mathbf{w}$ 加 1 個截距 $b$）。</p>
 <p>2. 用高斯消去法解線性方程組 $X_{\\mathcal{S}}\\, \\hat{\\boldsymbol{\\theta}} = \\mathbf{y}_{\\mathcal{S}}$，每列為 $[x_1,\\ldots,x_8,\\, 1]$。</p>
