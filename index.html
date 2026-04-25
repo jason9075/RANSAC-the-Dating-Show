@@ -355,6 +355,20 @@
     .modal-body p { margin-bottom: 0.7rem; }
     .modal-body .katex-display { margin: 0.5rem 0; overflow-x: auto; }
 
+    /* ── Global language button ── */
+    #global-lang-btn {
+      position: fixed; top: 0.8rem; right: 0.9rem; z-index: 300;
+      padding: 0.32rem 0.75rem;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.82); backdrop-filter: blur(10px);
+      color: var(--text); font-size: 0.72rem; font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(255,139,148,0.12);
+      transition: background 0.2s;
+    }
+    #global-lang-btn:hover { background: rgba(255,139,148,0.12); }
+
     /* 💡 button */
     #math-btn {
       position: fixed; bottom: 1.1rem; right: 1.1rem;
@@ -376,16 +390,18 @@
        alt="Fork me on GitHub">
 </a>
 
+<button id="global-lang-btn">中文</button>
+
 <div id="header">
   <h1>💘 RANSAC — The Dating Show</h1>
-  <p>Finding true love in 8 dimensions &nbsp;|&nbsp; 100 candidates · 20 soul matches hidden within</p>
+  <p data-i18n="subtitle">Finding true love in 8 dimensions &nbsp;|&nbsp; 100 candidates · 20 soul matches hidden within</p>
 </div>
 
 <div id="main">
   <!-- Left Panel -->
   <div id="left-panel">
     <div class="panel">
-      <div class="panel-title">Projection Axes</div>
+      <div class="panel-title" data-i18n="panelAxes">Projection Axes</div>
       <div class="axis-row">
         <label>X</label>
         <select id="axis-x"></select>
@@ -397,34 +413,34 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">God Mode</div>
+      <div class="panel-title" data-i18n="panelGod">God Mode</div>
       <button class="toggle-btn" id="toggle-inliers">
         <span class="toggle-dot" style="background:#FF8B94;"></span>
-        Show Inliers
+        <span data-i18n="btnInliers">Show Inliers</span>
       </button>
       <button class="toggle-btn" id="toggle-outliers">
         <span class="toggle-dot" style="background:#A9A9A9;"></span>
-        Show Outliers
+        <span data-i18n="btnOutliers">Show Outliers</span>
       </button>
       <button class="toggle-btn" id="toggle-truth">
         <span class="toggle-dot" style="background:#c9a0dc; border:1px dashed #9b7bb5;"></span>
-        Ground Truth Line
+        <span data-i18n="btnTruth">Ground Truth Line</span>
       </button>
     </div>
 
     <div class="panel">
-      <div class="panel-title">RANSAC Config</div>
+      <div class="panel-title" data-i18n="panelConfig">RANSAC Config</div>
       <div class="ctrl-row">
-        <label>Iterations</label>
+        <label data-i18n="lblIter">Iterations</label>
         <input type="range" id="ctrl-iter" min="10" max="200" value="50" />
         <span id="val-iter">50</span>
       </div>
       <div class="ctrl-row">
-        <label>Threshold</label>
+        <label data-i18n="lblThresh">Threshold</label>
         <input type="range" id="ctrl-thresh" min="1" max="30" value="10" />
         <span id="val-thresh">10</span>
       </div>
-      <button class="run-btn" id="run-btn">▶ Run RANSAC</button>
+      <button class="run-btn" id="run-btn" data-i18n="btnRun">▶ Run RANSAC</button>
     </div>
   </div>
 
@@ -436,7 +452,7 @@
     <div id="axis-x-label"></div>
     <div id="axis-y-label"></div>
     <div id="result-banner">
-      <div class="rb-title">💘 True Love Found!</div>
+      <div class="rb-title" data-i18n="resultTitle">💘 True Love Found!</div>
       <div class="rb-sub" id="result-sub"></div>
     </div>
   </div>
@@ -444,21 +460,21 @@
   <!-- Right Panel -->
   <div id="right-panel">
     <div class="panel">
-      <div class="panel-title">Algorithm Monitor</div>
+      <div class="panel-title" data-i18n="panelMonitor">Algorithm Monitor</div>
       <div class="stat-row">
-        <span class="stat-label">RANSAC Iteration</span>
+        <span class="stat-label" data-i18n="statIter">RANSAC Iteration</span>
         <span class="stat-value" id="stat-iter">—</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Consensus Set Size</span>
+        <span class="stat-label" data-i18n="statCons">Consensus Set Size</span>
         <span class="stat-value hl" id="stat-consensus">—</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Max Consensus Found</span>
+        <span class="stat-label" data-i18n="statMax">Max Consensus Found</span>
         <span class="stat-value hl" id="stat-max">—</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Model Residual</span>
+        <span class="stat-label" data-i18n="statResid">Model Residual</span>
         <span class="stat-value" id="stat-residual">—</span>
       </div>
       <div id="progress-bar-wrap">
@@ -467,27 +483,27 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">Legend</div>
+      <div class="panel-title" data-i18n="panelLegend">Legend</div>
       <div class="legend-row">
         <span class="legend-dot" style="background:#B2AC88;"></span>
-        Default candidate
+        <span data-i18n="legendDefault">Default candidate</span>
       </div>
       <div class="legend-row">
         <span class="legend-dot" style="background:#FF8B94;"></span>
-        Inlier (soul match)
+        <span data-i18n="legendInlier">Inlier (soul match)</span>
       </div>
       <div class="legend-row">
         <span class="legend-dot" style="background:#A9A9A9;"></span>
-        Outlier (acting)
+        <span data-i18n="legendOutlier">Outlier (acting)</span>
       </div>
       <div class="legend-row">
         <span class="legend-dot" style="background:#c9a0dc;"></span>
-        RANSAC consensus
+        <span data-i18n="legendConsensus">RANSAC consensus</span>
       </div>
     </div>
 
     <div class="panel" id="formula-panel">
-      <div class="panel-title">True Love Formula</div>
+      <div class="panel-title" data-i18n="panelFormula">True Love Formula</div>
       <div id="formula-text"></div>
     </div>
   </div>
@@ -500,10 +516,9 @@
 <div id="math-modal" role="dialog" aria-modal="true">
   <div class="modal-panel">
     <div class="modal-header">
-      <h2>Math Behind the Scene</h2>
+      <h2 data-i18n="modalTitle">Math Behind the Scene</h2>
       <div class="modal-actions">
-        <button class="modal-btn" id="lang-toggle">Eng / 中</button>
-        <button class="modal-btn" id="close-modal">Close ✕</button>
+        <button class="modal-btn" id="close-modal" data-i18n="modalClose">Close ✕</button>
       </div>
     </div>
     <div class="modal-body" id="modal-body"></div>

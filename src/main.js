@@ -2,22 +2,30 @@
 
 // ── Dimension definitions ──────────────────────────────────────────────────────
 const DIMS = [
-  { key: 'cilantro',  label: 'Cilantro Tolerance',        short: 'Cilantro',  min: 0,  max: 100, unit: '',
-    tip: 'Score 0 = "get that soap away from me." Score 100 = orders extra cilantro on everything. The ultimate culinary dealbreaker — no algorithm can bridge this gap.' },
-  { key: 'invoice',   label: 'Cloud Invoice Rate',         short: 'Invoice',   min: 0,  max: 100, unit: '%',
-    tip: 'How often do you use the e-invoice carrier instead of taking a paper receipt? A proxy for civic responsibility, tax-law awareness, and whether your phone was made after 2018.' },
-  { key: 'threads',   label: 'Threads Shitposting Idx',   short: 'Threads',   min: 0,  max: 20,  unit: '/day',
-    tip: 'Daily volume of low-effort content fired into the void. 0 = lurker with opinions. 20 = chronically online. Your soul match posts at exactly the same frequency — no more, no less.' },
-  { key: 'actemp',    label: 'AC Temp Preference',         short: 'AC Temp',   min: 16, max: 30,  unit: '°C',
-    tip: 'The thermostat is the #1 source of relationship conflict. 16°C = penguin mode. 30°C = "why is the AC even on?" A 2°C gap is negotiable; 8°C is a dealbreaker.' },
-  { key: 'mysticism', label: 'Mysticism Belief',           short: 'Mysticism', min: 0,  max: 100, unit: '',
-    tip: 'How much do you believe Mercury retrograde ruined your pull request? 0 = "correlation ≠ causation." 100 = won\'t make decisions on a void-of-course moon. Extreme mismatch causes irreconcilable epistemological differences.' },
-  { key: 'mute',      label: 'Mute Speed',                 short: 'Mute',      min: 0,  max: 60,  unit: 's',
-    tip: 'Seconds until you mute the family group chat after a new message appears. 0 = reflexive mute (you are spiritually exhausted). 60 = masochist who reads every forward. A shared mute strategy is the bedrock of domestic peace.' },
-  { key: 'ghosting',  label: 'Ghosting Resilience',        short: 'Ghosting',  min: 1,  max: 10,  unit: '',
-    tip: 'Recovery speed after being left on read. 1 = still refreshing their profile two years later. 10 = "who? anyway, here\'s my new side project." High resilience is admirable; a perfect 10 may indicate emotional unavailability.' },
-  { key: 'dotfiles',  label: 'Dotfiles Authenticity',      short: 'Dotfiles',  min: 0,  max: 100, unit: '',
-    tip: 'What % of things you call "your own work" did you actually produce? 0 = pasted ChatGPT output, changed the font, submitted as original. 100 = can explain every line without looking at the source. Your soul match operates at exactly the same level of plausible deniability.' },
+  { key: 'cilantro',  label: 'Cilantro Tolerance',       labelZh: '香菜耐受度',       short: 'Cilantro',  min: 0,  max: 100, unit: '',
+    tip:   'Score 0 = "get that soap away from me." Score 100 = orders extra cilantro on everything. The ultimate culinary dealbreaker — no algorithm can bridge this gap.',
+    tipZh: '0 分 = 「那是肥皂吧」，100 分 = 叫外送必加「香菜加倍」。飲食觀的根本分歧，任何演算法都難以彌合。' },
+  { key: 'invoice',   label: 'Cloud Invoice Rate',        labelZh: '發票載具使用率',   short: 'Invoice',   min: 0,  max: 100, unit: '%',
+    tip:   'How often do you use the e-invoice carrier instead of taking a paper receipt? A proxy for civic responsibility, tax-law awareness, and whether your phone was made after 2018.',
+    tipZh: '你有多常用手機載具而不是索取紙本？反映公民意識、對稅法的了解，以及你的手機是否在 2018 年之後製造。' },
+  { key: 'threads',   label: 'Threads Shitposting Idx',  labelZh: 'Threads 廢文產出指數', short: 'Threads',   min: 0,  max: 20,  unit: '/day',
+    tip:   'Daily volume of low-effort content fired into the void. 0 = lurker with opinions. 20 = chronically online. Your soul match posts at exactly the same frequency — no more, no less.',
+    tipZh: '每天發多少低努力含量的內容進虛空？0 = 有想法但只看不發，20 = 嚴重網路成癮。真愛的條件：對方發廢文的頻率跟你完全一致。' },
+  { key: 'actemp',    label: 'AC Temp Preference',        labelZh: '空調偏好溫度',     short: 'AC Temp',   min: 16, max: 30,  unit: '°C',
+    tip:   'The thermostat is the #1 source of relationship conflict. 16°C = penguin mode. 30°C = "why is the AC even on?" A 2°C gap is negotiable; 8°C is a dealbreaker.',
+    tipZh: '冷氣溫度是所有長期關係衝突的第一來源。16°C = 企鵝模式，30°C = 「冷氣開著幹嘛」。2°C 的差距還可以協商；超過 8°C 請直接分手。' },
+  { key: 'mysticism', label: 'Mysticism Belief',          labelZh: '神祕學迷信程度',   short: 'Mysticism', min: 0,  max: 100, unit: '',
+    tip:   'How much do you believe Mercury retrograde ruined your pull request? 0 = "correlation ≠ causation." 100 = won\'t make decisions on a void-of-course moon. Extreme mismatch causes irreconcilable epistemological differences.',
+    tipZh: '你有多相信水星逆行毀了你的 pull request？0 = 「相關性不等於因果」，100 = 月亮空亡不做決定。極端不匹配會導致無法調和的認識論分歧。' },
+  { key: 'mute',      label: 'Mute Speed',                labelZh: '群組靜音反射時間', short: 'Mute',      min: 0,  max: 60,  unit: 's',
+    tip:   'Seconds until you mute the family group chat after a new message appears. 0 = reflexive mute (you are spiritually exhausted). 60 = masochist who reads every forward. A shared mute strategy is the bedrock of domestic peace.',
+    tipZh: '家族群組傳來新訊息後，你幾秒內靜音？0 = 反射動作（你已精神疲憊），60 = 還在看完所有轉發訊息的受虐狂。共同的靜音策略是家庭和平的基石。' },
+  { key: 'ghosting',  label: 'Ghosting Resilience',       labelZh: '被放鳥復原係數',   short: 'Ghosting',  min: 1,  max: 10,  unit: '',
+    tip:   'Recovery speed after being left on read. 1 = still refreshing their profile two years later. 10 = "who? anyway, here\'s my new side project." High resilience is admirable; a perfect 10 may indicate emotional unavailability.',
+    tipZh: '被已讀不回之後的心理復原速度。1 = 兩年後還在反覆看對方的限時動態，10 = 「誰？算了，來看我的新 side project」。高分令人欽佩；滿分可能代表迴避型依附。' },
+  { key: 'dotfiles',  label: 'Work Originality',           labelZh: '作品原創純度',     short: 'Originality', min: 0,  max: 100, unit: '',
+    tip:   'What % of things you call "your own work" did you actually produce? 0 = pasted ChatGPT output, changed the font, submitted as original. 100 = can explain every line without looking at the source. Your soul match operates at exactly the same level of plausible deniability.',
+    tipZh: '你說的「我做的」有幾成真的是你做的？0 = 整份報告讓 AI 生成，改完字型就上台報告；100 = 每句話都能用自己的話再說一遍。真愛就是找到跟你誠實程度剛好一樣的人。' },
 ];
 
 const N_TOTAL   = 100;
@@ -53,7 +61,7 @@ const S = {
   targets:   [],  // target  canvas coords [{cx,cy}]
   hoveredIdx: null,
   heartbeat:  0,
-  modalLang: 'en',
+  lang: 'en',
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -85,9 +93,94 @@ const axisYLabel  = document.getElementById('axis-y-label');
 const tooltip     = document.getElementById('tooltip');
 const mathModal   = document.getElementById('math-modal');
 const modalBody   = document.getElementById('modal-body');
-const mathBtn     = document.getElementById('math-btn');
-const closeModal  = document.getElementById('close-modal');
-const langToggle  = document.getElementById('lang-toggle');
+const mathBtn        = document.getElementById('math-btn');
+const closeModal     = document.getElementById('close-modal');
+const globalLangBtn  = document.getElementById('global-lang-btn');
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    subtitle:       'Finding true love in 8 dimensions | 100 candidates · 20 soul matches hidden within',
+    panelAxes:      'Projection Axes',
+    panelGod:       'God Mode',
+    panelConfig:    'RANSAC Config',
+    panelMonitor:   'Algorithm Monitor',
+    panelLegend:    'Legend',
+    panelFormula:   'True Love Formula',
+    btnInliers:     'Show Inliers',
+    btnOutliers:    'Show Outliers',
+    btnTruth:       'Ground Truth Line',
+    lblIter:        'Iterations',
+    lblThresh:      'Threshold',
+    btnRun:         '▶ Run RANSAC',
+    btnRunAgain:    '▶ Run Again',
+    btnRunning:     '⏳ Running...',
+    statIter:       'RANSAC Iteration',
+    statCons:       'Consensus Set Size',
+    statMax:        'Max Consensus Found',
+    statResid:      'Model Residual',
+    legendDefault:  'Default candidate',
+    legendInlier:   'Inlier (soul match)',
+    legendOutlier:  'Outlier (acting)',
+    legendConsensus:'RANSAC consensus',
+    resultTitle:    '💘 True Love Found!',
+    resultSub:      (n, t) => `${n} soul matches found in ${t} iterations`,
+    formulaBias:    '(bias)',
+    modalTitle:     'Math Behind the Scene',
+    modalClose:     'Close ✕',
+    langBtn:        '中文',
+  },
+  zh: {
+    subtitle:       '在 8 個維度中尋找真愛｜100 位候選人 · 20 位真愛戰士藏在其中',
+    panelAxes:      '投影軸',
+    panelGod:       '上帝視角',
+    panelConfig:    'RANSAC 設定',
+    panelMonitor:   '演算法監控',
+    panelLegend:    '圖例',
+    panelFormula:   '真愛公式',
+    btnInliers:     '顯示 Inliers',
+    btnOutliers:    '顯示 Outliers',
+    btnTruth:       '真理平面',
+    lblIter:        '迭代次數',
+    lblThresh:      '閾值',
+    btnRun:         '▶ 執行 RANSAC',
+    btnRunAgain:    '▶ 再跑一次',
+    btnRunning:     '⏳ 執行中...',
+    statIter:       'RANSAC 迭代',
+    statCons:       'Consensus Set 大小',
+    statMax:        '最大共識集',
+    statResid:      '模型殘差',
+    legendDefault:  '預設候選人',
+    legendInlier:   'Inlier（真愛戰士）',
+    legendOutlier:  'Outlier（演技派）',
+    legendConsensus:'RANSAC 共識集',
+    resultTitle:    '💘 真愛現身！',
+    resultSub:      (n, t) => `在 ${t} 次迭代中找到 ${n} 位真愛戰士`,
+    formulaBias:    '（截距）',
+    modalTitle:     '頁面背後的數學',
+    modalClose:     '關閉 ✕',
+    langBtn:        'English',
+  },
+};
+
+function applyLang() {
+  const t = I18N[S.lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    if (el === btnRun) return; // run button state managed separately
+    const key = el.dataset.i18n;
+    if (typeof t[key] === 'string') el.textContent = t[key];
+  });
+  globalLangBtn.textContent = t.langBtn;
+  mathBtn.title = S.lang === 'en' ? 'Explain the math' : '數學原理說明';
+  // Update run button state text
+  if (S.running) {
+    btnRun.textContent = t.btnRunning;
+  } else if (S.done) {
+    btnRun.textContent = t.btnRunAgain;
+  }
+  // Sync modal content
+  renderModal();
+}
 
 // ── Data generation ────────────────────────────────────────────────────────────
 function rng(lo, hi) { return lo + Math.random() * (hi - lo); }
@@ -249,32 +342,35 @@ function finishRANSAC() {
   S.running = false;
   S.done    = true;
   btnRun.disabled = false;
-  btnRun.textContent = '▶ Run Again';
+  btnRun.textContent = I18N[S.lang].btnRunAgain;
 
-  if (S.bestWeights) {
-    const weightLines = S.bestWeights.map((w, i) => {
-      const sign = w >= 0 ? '+' : '';
-      return `<div class="formula-line" data-dim="${i}">`
-           + `<span class="fl-weight">${sign}${w.toFixed(3)}</span>`
-           + ` × `
-           + `<span class="fl-name">${DIMS[i].short}</span>`
-           + `</div>`;
-    }).join('');
-    const biasSign = S.bestBias >= 0 ? '+' : '';
-    formulaText.innerHTML =
-      `<div class="fl-label">Y =</div>`
-      + weightLines
-      + `<div class="formula-line fl-bias">`
-      + `<span class="fl-weight">${biasSign}${S.bestBias.toFixed(3)}</span>`
-      + ` <span style="color:var(--text-sub);font-size:0.58rem">(bias)</span>`
-      + `</div>`;
-    formulaPanel.classList.add('visible');
-    bindFormulaHover();
-  }
+  if (S.bestWeights) renderFormula();
 
-  resultSub.textContent = `${S.bestConsensus} soul matches found in ${S.maxIter} iterations`;
+  resultSub.textContent = I18N[S.lang].resultSub(S.bestConsensus, S.maxIter);
   resultBanner.classList.add('visible');
   setTimeout(() => resultBanner.classList.remove('visible'), 3500);
+}
+
+function renderFormula() {
+  const t = I18N[S.lang];
+  const weightLines = S.bestWeights.map((w, i) => {
+    const sign = w >= 0 ? '+' : '';
+    return `<div class="formula-line" data-dim="${i}">`
+         + `<span class="fl-weight">${sign}${w.toFixed(3)}</span>`
+         + ` × `
+         + `<span class="fl-name">${DIMS[i].short}</span>`
+         + `</div>`;
+  }).join('');
+  const biasSign = S.bestBias >= 0 ? '+' : '';
+  formulaText.innerHTML =
+    `<div class="fl-label">Y =</div>`
+    + weightLines
+    + `<div class="formula-line fl-bias">`
+    + `<span class="fl-weight">${biasSign}${S.bestBias.toFixed(3)}</span>`
+    + ` <span style="color:var(--text-sub);font-size:0.58rem">${t.formulaBias}</span>`
+    + `</div>`;
+  formulaPanel.classList.add('visible');
+  bindFormulaHover();
 }
 
 // ── Render loop ───────────────────────────────────────────────────────────────
@@ -449,9 +545,12 @@ function bindFormulaHover() {
       const d = DIMS[+el.dataset.dim];
       if (!d) return;
       const rect = el.getBoundingClientRect();
+      const isZh  = S.lang === 'zh';
+      const title = isZh ? (d.labelZh || d.label) : d.label;
+      const body  = isZh ? (d.tipZh   || d.tip)   : d.tip;
       tooltip.innerHTML =
-        `<div class="tt-title">${d.label} <span style="font-weight:400;color:var(--text-sub)">(${d.min}–${d.max}${d.unit})</span></div>`
-        + `<div style="margin-top:0.2rem;line-height:1.6">${d.tip}</div>`;
+        `<div class="tt-title">${title} <span style="font-weight:400;color:var(--text-sub)">(${d.min}–${d.max}${d.unit})</span></div>`
+        + `<div style="margin-top:0.2rem;line-height:1.6">${body}</div>`;
       let left = rect.right + 10;
       let top  = rect.top - 8;
       if (left + 260 > window.innerWidth) left = rect.left - 270;
@@ -515,7 +614,7 @@ const MODAL = {
       <td style="padding:0.32rem 0.5rem;">Psychological recovery coefficient after being left on read. 1 = you're still refreshing their profile two years later, 10 = "who? anyway, here's my new project." High resilience is admirable; perfect score may indicate emotional unavailability.</td>
     </tr>
     <tr>
-      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Dotfiles Authenticity</td>
+      <td style="padding:0.32rem 0.5rem;font-weight:700;">$x_8$ Work Originality</td>
       <td style="padding:0.32rem 0.5rem;color:#8a7a7a;">0 – 100</td>
       <td style="padding:0.32rem 0.5rem;">Of the things you confidently call "your own work," what fraction did you actually produce? 0 = copy-pasted the ChatGPT output, changed the font, and submitted it as original, 100 = you can explain every sentence in your own words without looking at the source. Your soul match operates at exactly the same level of plausible deniability as you do.</td>
     </tr>
@@ -593,7 +692,8 @@ const MODAL = {
 };
 
 function renderModal() {
-  modalBody.innerHTML = MODAL[S.modalLang] || MODAL.en;
+  const langKey = S.lang === 'zh' ? 'zhTW' : 'en';
+  modalBody.innerHTML = MODAL[langKey] || MODAL.en;
   if (window.renderMathInElement) {
     window.renderMathInElement(modalBody, {
       delimiters: [
@@ -650,7 +750,7 @@ btnRun.addEventListener('click', () => {
   statMax.textContent   = '—';
   statResid.textContent = '—';
   btnRun.disabled = true;
-  btnRun.textContent = '⏳ Running...';
+  btnRun.textContent = I18N[S.lang].btnRunning;
 
   // Reset residuals
   S.candidates.forEach(c => { c.residual = null; });
@@ -672,9 +772,11 @@ canvas.addEventListener('mouseleave', () => {
 mathBtn.addEventListener('click', () => { renderModal(); mathModal.classList.add('open'); });
 closeModal.addEventListener('click', () => mathModal.classList.remove('open'));
 mathModal.addEventListener('click', e => { if (e.target === mathModal) mathModal.classList.remove('open'); });
-langToggle.addEventListener('click', () => {
-  S.modalLang = S.modalLang === 'en' ? 'zhTW' : 'en';
-  renderModal();
+
+globalLangBtn.addEventListener('click', () => {
+  S.lang = S.lang === 'en' ? 'zh' : 'en';
+  applyLang();
+  if (S.done && S.bestWeights) renderFormula();
 });
 
 window.addEventListener('resize', resizeCanvas);
